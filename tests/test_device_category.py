@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app.config.database import engine
-from app.database import tables, schemas
+from app.database import schemas
 from app.main import app
 
 from tests import functions
@@ -13,8 +12,7 @@ device_category_id = 0
 
 
 def test_start():
-    tables.Base.metadata.drop_all(bind=engine)
-    tables.Base.metadata.create_all(bind=engine)
+    functions.start()
 
     global admin_access_token
 
@@ -23,7 +21,7 @@ def test_start():
         name="test_admin",
         password="test_admin",
         username="test_admin",
-        creator_id=None,
+        creator_id=0,
     )
     functions.create_admin(form_data)
     response = functions.login("test_admin", "test_admin")
@@ -83,5 +81,4 @@ def test_delete():
 
 
 def test_end():
-    tables.Base.metadata.drop_all(bind=engine)
-    engine.dispose()
+    functions.end()

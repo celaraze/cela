@@ -1,8 +1,8 @@
-from typing import Union
-
 from fastapi.testclient import TestClient
 from httpx import Response
-from app.database import schemas
+
+from app.config.database import SessionLocal, engine
+from app.database import schemas, tables
 from app.services import auth
 
 from app.main import app
@@ -10,7 +10,21 @@ from app.main import app
 client = TestClient(app)
 
 
+def start():
+    db = SessionLocal()
+    tables.Base.metadata.drop_all(bind=engine)
+    tables.Base.metadata.create_all(bind=engine)
+    db.close()
+
+
+def end():
+    db = SessionLocal()
+    tables.Base.metadata.drop_all(bind=engine)
+    db.close()
+
+
 def create_admin(user: schemas.UserCreateForm):
+    db = SessionLocal()
     user_create = schemas.UserCreateForm(
         email=user.email,
         name=user.name,
@@ -18,7 +32,8 @@ def create_admin(user: schemas.UserCreateForm):
         username=user.username,
         creator_id=user.creator_id,
     )
-    auth.create_super_admin(user_create)
+    auth.create_super_admin(db, user_create)
+    db.close()
 
 
 def login(username: str, password: str) -> Response:

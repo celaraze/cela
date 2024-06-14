@@ -29,10 +29,11 @@ def decode_access_token(token: str):
 
 
 def authenticate(
+        db,
         username: str,
         password: str,
 ) -> Union[schemas.User, bool]:
-    user = User.select_one_by_username(username)
+    user = User.select_one_by_username(db, username)
     if not user:
         return False
     if not crypt.verify_hashed_password(password, user.hashed_password):
@@ -40,20 +41,20 @@ def authenticate(
     return user
 
 
-def create_super_admin(form_data: schemas.UserCreateForm):
+def create_super_admin(db, form_data: schemas.UserCreateForm):
     try:
-        role = Role.select_one_by_name("superuser")
+        role = Role.select_one_by_name(db, "superuser")
         if not role:
             print("Creating a superuser role.")
             role_create = schemas.RoleCreateForm(
                 name="superuser",
                 scopes=["su"]
             )
-            role = Role.create(role_create)
+            role = Role.create(db, role_create)
             print("Superuser role created successfully.")
         else:
             print("Superuser role already exists.")
-        user = User.create(form_data)
+        user = User.create(db, form_data)
         if not user:
             print("Error creating super user.")
             return
@@ -62,7 +63,7 @@ def create_super_admin(form_data: schemas.UserCreateForm):
             user_id=user.id,
             role_id=role.id,
         )
-        user_has_role = UserHasRole.create(user_has_role)
+        user_has_role = UserHasRole.create(db, user_has_role)
         if user_has_role:
             print("User has superuser role.")
 

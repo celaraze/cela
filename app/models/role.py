@@ -2,35 +2,34 @@ from ..config.database import SessionLocal
 from ..database import tables, schemas
 from ..models.base import BaseModel
 
-db = SessionLocal()
 table = tables.Role
 schema = schemas.Role
 
 
 class Role:
     @staticmethod
-    def select_one(user_id: int):
-        return BaseModel.select_one(table, user_id)
+    def select_one(db, user_id: int):
+        return BaseModel.select_one(db, table, user_id)
 
     @staticmethod
-    def select_one_by_name(name: str):
+    def select_one_by_name(db, name: str):
         conditions = {
             "name": name,
         }
-        return BaseModel.select_one_by_columns(table, conditions)
+        return BaseModel.select_one_by_columns(db, table, conditions)
 
     @staticmethod
-    def select_all(skip: int = 0, limit: int = 100):
-        return BaseModel.select_all(table, skip, limit)
+    def select_all(db, skip: int = 0, limit: int = 100):
+        return BaseModel.select_all(db, table, skip, limit)
 
     @staticmethod
-    def create(form_data):
-        return BaseModel.create(table, form_data)
+    def create(db, form_data):
+        return BaseModel.create(db, table, form_data)
 
     @staticmethod
-    def update(user_id: int, form_data: schemas.UpdateForm):
-        return BaseModel.update(table, user_id, form_data)
+    def update(db, user_id: int, form_data: schemas.UpdateForm):
+        return BaseModel.update(db, table, user_id, form_data)
 
     @staticmethod
-    def delete(user_id: int):
-        return BaseModel.delete(table, user_id)
+    def delete(db, user_id: int):
+        return BaseModel.delete(db, table, user_id)

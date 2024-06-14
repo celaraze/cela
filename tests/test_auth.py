@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app.database import schemas, tables
-from app.config.database import engine
+from app.database import schemas
 
 from app.main import app
 
@@ -13,8 +12,7 @@ access_token = ""
 
 
 def test_start():
-    tables.Base.metadata.drop_all(bind=engine)
-    tables.Base.metadata.create_all(bind=engine)
+    functions.start()
 
     user_create = schemas.UserCreateForm(
         email="test_admin@test.com",
@@ -91,5 +89,4 @@ def test_update():
 
 
 def test_end():
-    tables.Base.metadata.drop_all(bind=engine)
-    engine.dispose()
+    functions.end()

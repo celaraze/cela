@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app.config.database import engine
-from app.database import tables, schemas
+from app.database import schemas
 from app.main import app
 
 from tests import functions
@@ -16,20 +15,20 @@ user_has_role_id = 0
 
 
 def test_start():
-    tables.Base.metadata.drop_all(bind=engine)
-    tables.Base.metadata.create_all(bind=engine)
+    functions.start()
 
     global admin_access_token
     global user_access_token
     global user_id
     global role_id
+    global user_has_role_id
 
     form_data = schemas.UserCreateForm(
         email="test_admin@test.com",
         name="test_admin",
         password="test_admin",
         username="test_admin",
-        creator_id=None,
+        creator_id=0,
     )
     functions.create_admin(form_data)
     response = functions.login("test_admin", "test_admin")
@@ -63,6 +62,7 @@ def test_start():
     }
     response = functions.create_user_has_role(admin_access_token, form_data)
     assert response.status_code == 200
+    user_has_role_id = response.json()['id']
 
     response = functions.login("test_user", "test_user")
     assert response.status_code == 200
@@ -121,8 +121,7 @@ def test_create():
         "role_id": role_id,
     }
     response = functions.create_user_has_role(user_access_token, form_data)
-    assert response.status_code == 200
-    user_has_role_id = response.json()['id']
+    assert response.status_code == 409
 
 
 def test_select():
@@ -225,5 +224,4 @@ def test_delete():
 
 
 def test_end():
-    tables.Base.metadata.drop_all(bind=engine)
-    engine.dispose()
+    functions.end()

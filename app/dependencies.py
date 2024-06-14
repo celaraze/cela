@@ -1,10 +1,20 @@
+from collections.abc import Generator
+from typing import Annotated
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
+from sqlalchemy.orm import Session
 
+from .config.database import engine
 from .database import schemas
 
 from .models.user import User
 from .services.auth import decode_access_token
+
+
+def get_database_session() -> Generator[Session, None, None]:
+    with Session(engine) as session:
+        yield session
 
 
 def get_oauth_scheme():
@@ -35,9 +45,14 @@ def get_oauth_scheme():
     )
 
 
+databaseSession = Annotated[Session, Depends(get_database_session)]
+tokenDependency = Annotated[str, Depends(get_oauth_scheme())]
+
+
 async def get_current_user(
+        db: databaseSession,
         security_scopes: SecurityScopes,
-        token: str = Depends(get_oauth_scheme()),
+        token: tokenDependency,
 ):
     if security_scopes.scopes:
         authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
@@ -57,7 +72,7 @@ async def get_current_user(
         token_data = schemas.AuthTokenData(user_id=user_id, scopes=token_scopes)
     except Exception:
         raise credentials_exception
-    user = User.select_one(token_data.user_id)
+    user = User.select_one(db, token_data.user_id)
 
     if user is None:
         raise credentials_exception
