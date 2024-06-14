@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+>
+> This project is still working in progress. Please go to [CAT](https://github.com/celaraze/cat) or [CHEMEX](https://github.com/celaraze/chemex) for using in production.
+
 # Cela
 
 English | [简体中文](README/README.zh_CN.md)
