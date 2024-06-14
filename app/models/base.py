@@ -50,7 +50,7 @@ class BaseModel:
         return db_record
 
     @staticmethod
-    def update(table, user_id, form_data: schemas.UpdateForm):
+    def update(table, user_id: int, form_data: schemas.UpdateForm):
         db_record = (
             db.query(table)
             .filter(table.id.__eq__(user_id))

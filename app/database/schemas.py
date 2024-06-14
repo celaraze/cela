@@ -6,7 +6,7 @@ from pydantic import BaseModel as BaseSchema
 
 # schema for decoding token
 class AuthTokenData(BaseSchema):
-    username: str
+    user_id: int
     scopes: list[str] = []
 
 
@@ -19,6 +19,7 @@ class UpdateForm(BaseSchema):
 class RoleCreateForm(BaseSchema):
     name: str
     scopes: list[str] = []
+    creator_id: int = 0
 
 
 class UserChangePasswordForm(BaseSchema):
@@ -31,22 +32,32 @@ class UserCreateForm(BaseSchema):
     email: str
     name: str
     password: str
-    creator_id: Union[int, None] = None
+    creator_id: int = 0
 
 
 class BrandCreateForm(BaseSchema):
     name: str
-    creator_id: Union[int, None] = None
+    creator_id: int = 0
 
 
 class DeviceCategoryCreateForm(BaseSchema):
     name: str
-    creator_id: Union[int, None] = None
+    creator_id: int = 0
 
 
 class UserHasRoleCreateForm(BaseSchema):
     user_id: int
     role_id: int
+    creator_id: int = 0
+
+
+class FootprintCreateForm(BaseSchema):
+    url: str
+    action: str
+    request_body: dict
+    response_status_code: int
+    response_body: str
+    creator_id: int
 
 
 # Model schemas #
@@ -54,8 +65,9 @@ class Role(BaseSchema):
     id: int
     name: str
     scopes: list[str]
-    created_at: Union[datetime, None] = None
-    deleted_at: Union[datetime, None] = None
+    creator_id: int
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
 
     class Config:
         from_attributes = True
@@ -67,9 +79,9 @@ class User(BaseSchema):
     email: str
     name: str
     is_active: bool = True
-    creator_id: Union[int, None] = None
-    created_at: Union[datetime, None] = None
-    deleted_at: Union[datetime, None] = None
+    creator_id: int
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
     roles: list[Role] = []
     scopes: list[str] = []
 
@@ -84,17 +96,20 @@ class Footprint(BaseSchema):
     request_body: dict
     response_status_code: int
     response_body: dict
-    user_id: int
+    creator_id: int
     created_at: datetime
-    creator: Union[User, None] = None
+
+    class Config:
+        from_attributes = True
 
 
 class UserHasRole(BaseSchema):
     id: int
     user_id: int
     role_id: int
-    created_at: Union[datetime, None] = None
-    deleted_at: Union[datetime, None] = None
+    creator_id: int
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
 
     class Config:
         from_attributes = True
@@ -105,10 +120,11 @@ class UserHasDevice(BaseSchema):
     user_id: int
     device_id: int
     flag: int
-    message: Union[str, None] = None
-    expired_at: Union[datetime, None] = None
-    created_at: Union[datetime, None] = None
-    deleted_at: Union[datetime, None] = None
+    message: Union[str, None]
+    expired_at: Union[datetime, None]
+    creator_id: int
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
 
     class Config:
         from_attributes = True
@@ -117,31 +133,38 @@ class UserHasDevice(BaseSchema):
 class Brand(BaseSchema):
     id: int
     name: str
-    creator_id: Union[int, None] = None
-    created_at: Union[datetime, None] = None
-    deleted_at: Union[datetime, None] = None
-    creator: Union[User, None] = None
+    creator_id: int
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
+
+    class Config:
+        from_attributes = True
 
 
 class DeviceCategory(BaseSchema):
     id: int
     name: str
-    creator_id: Union[int, None] = None
-    created_at: Union[datetime, None] = None
-    deleted_at: Union[datetime, None] = None
-    creator: Union[User, None] = None
+    creator_id: int
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
+
+    class Config:
+        from_attributes = True
 
 
 class Device(BaseSchema):
     id: int
     hostname: str
     asset_number: str
-    ipv4_address: Union[str, None] = None
-    ipv6_address: Union[str, None] = None
-    mac_address: Union[str, None] = None
-    description: Union[str, None] = None
+    ipv4_address: Union[str, None]
+    ipv6_address: Union[str, None]
+    mac_address: Union[str, None]
+    description: Union[str, None]
     brand: Brand
     category: DeviceCategory
-    created_at: Union[datetime, None] = None
-    deleted_at: Union[datetime, None] = None
-    creator: Union[User, None] = None
+    creator_id: int
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
+
+    class Config:
+        from_attributes = True

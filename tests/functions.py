@@ -206,3 +206,40 @@ def delete_brand(access_token: str, brand_id: id) -> Response:
         f"/brands/{brand_id}",
         headers={"Authorization": f"Bearer {access_token}"},
     )
+
+
+def create_device_category(access_token: str, form_data: dict) -> Response:
+    return client.post(
+        f"/device_categories",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data
+    )
+
+
+def select_device_categories(access_token: str) -> Response:
+    return client.get(
+        f"/device_categories",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def select_device_category(access_token: str, device_category_id: id) -> Response:
+    return client.get(
+        f"/device_categories/{device_category_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def update_device_category(access_token: str, device_category_id: id, form_data: dict) -> Response:
+    return client.put(
+        f"/device_categories/{device_category_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data
+    )
+
+
+def delete_device_category(access_token: str, device_category_id: id) -> Response:
+    return client.delete(
+        f"/device_categories/{device_category_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )

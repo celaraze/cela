@@ -28,7 +28,7 @@ class Role:
         return BaseModel.create(table, form_data)
 
     @staticmethod
-    def update(user_id, form_data: schemas.UpdateForm):
+    def update(user_id: int, form_data: schemas.UpdateForm):
         return BaseModel.update(table, user_id, form_data)
 
     @staticmethod

@@ -2,17 +2,9 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 
 from .database import schemas
+
 from .models.user import User
-from .config.database import SessionLocal
 from .services.auth import decode_access_token
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 def get_oauth_scheme():
@@ -58,14 +50,14 @@ async def get_current_user(
     )
     try:
         payload = decode_access_token(token)
-        username: str = payload.get("username")
-        if username is None:
+        user_id: int = payload.get("user_id")
+        if user_id is None:
             raise credentials_exception
         token_scopes = payload.get("scopes", [])
-        token_data = schemas.AuthTokenData(username=username, scopes=token_scopes)
+        token_data = schemas.AuthTokenData(user_id=user_id, scopes=token_scopes)
     except Exception:
         raise credentials_exception
-    user = User.select_one_by_username(token_data.username)
+    user = User.select_one(token_data.user_id)
 
     if user is None:
         raise credentials_exception

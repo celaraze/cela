@@ -9,7 +9,7 @@ from tests import functions
 client = TestClient(app)
 
 admin_access_token = ""
-brand_id = 0
+device_category_id = 0
 
 
 def test_start():
@@ -33,52 +33,52 @@ def test_start():
 
 
 def test_create():
-    global brand_id
+    global device_category_id
 
     form_data = {
-        "name": "test_brand",
+        "name": "test_device_category",
     }
-    response = functions.create_brand(admin_access_token, form_data)
+    response = functions.create_device_category(admin_access_token, form_data)
     assert response.status_code == 200
-    brand_id = response.json()['id']
+    device_category_id = response.json()['id']
 
-    response = functions.create_brand(admin_access_token, form_data)
+    response = functions.create_device_category(admin_access_token, form_data)
     assert response.status_code == 409
 
 
 def test_select():
-    response = functions.select_brands(admin_access_token)
+    response = functions.select_device_categories(admin_access_token)
     assert response.status_code == 200
 
-    response = functions.select_brand(admin_access_token, 0)
+    response = functions.select_device_category(admin_access_token, 0)
     assert response.status_code == 404
 
-    response = functions.select_brand(admin_access_token, brand_id)
+    response = functions.select_device_category(admin_access_token, device_category_id)
     assert response.status_code == 200
-    assert response.json()['name'] == "test_brand"
+    assert response.json()['name'] == "test_device_category"
 
 
 def test_update():
     form_data = {
         "key": "name",
-        "value": "test_brand2",
+        "value": "test_device_category2",
     }
 
-    response = functions.update_brand(admin_access_token, 0, form_data)
+    response = functions.update_device_category(admin_access_token, 0, form_data)
     assert response.status_code == 404
 
-    response = functions.update_brand(admin_access_token, brand_id, form_data)
+    response = functions.update_device_category(admin_access_token, device_category_id, form_data)
     assert response.status_code == 200
-    assert response.json()['name'] == "test_brand2"
+    assert response.json()['name'] == "test_device_category2"
 
 
 def test_delete():
-    response = functions.delete_brand(admin_access_token, 0)
+    response = functions.delete_device_category(admin_access_token, 0)
     assert response.status_code == 404
 
-    response = functions.delete_brand(admin_access_token, brand_id)
+    response = functions.delete_device_category(admin_access_token, device_category_id)
     assert response.status_code == 200
-    response = functions.delete_brand(admin_access_token, brand_id)
+    response = functions.delete_device_category(admin_access_token, device_category_id)
     assert response.status_code == 404
 
 

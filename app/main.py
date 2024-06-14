@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from .database import tables
 from .config.database import engine
-from .controllers import auth_controller, role_controller, user_controller, user_has_role_controller
+from .controllers import auth_controller, role_controller, user_controller, user_has_role_controller, brand_controller, \
+    device_category_controller
 
 tables.Base.metadata.create_all(bind=engine)
 
@@ -13,13 +14,13 @@ tags_metadata = [
 ]
 
 description = """
-`FastService` API helps you do awesome stuff. 🚀
+`Cela` API helps you do awesome stuff. 🚀
 """
 
 app = FastAPI(
-    title="FastService",
+    title="Cela",
     description=description,
-    summary="Scaffold FastAPI project.",
+    summary="Cela APIs",
     version="0.0.1",
     contact={
         "name": "celaraze",
@@ -37,3 +38,5 @@ app.include_router(auth_controller.router)
 app.include_router(role_controller.router)
 app.include_router(user_controller.router)
 app.include_router(user_has_role_controller.router)
+app.include_router(brand_controller.router)
+app.include_router(device_category_controller.router)

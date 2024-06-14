@@ -29,7 +29,7 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     scopes = User.get_scopes(user.id)
-    access_token = create_access_token(data={"username": user.username, "scopes": scopes})
+    access_token = create_access_token(data={"user_id": user.id, "scopes": scopes})
     return {"access_token": access_token, "type": "bearer"}
 
 
@@ -71,5 +71,5 @@ async def refresh_scopes(
         current_user: schemas.User = Security(get_current_user, scopes=["auth:me"]),
 ):
     scopes = User.get_scopes(current_user.id)
-    access_token = create_access_token(data={"username": current_user.username, "scopes": scopes})
+    access_token = create_access_token(data={"user_id": current_user.id, "scopes": scopes})
     return {"access_token": access_token, "type": "bearer"}

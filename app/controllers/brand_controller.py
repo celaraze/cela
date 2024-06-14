@@ -49,6 +49,7 @@ async def create_brand(
             status_code=status.HTTP_409_CONFLICT,
             detail="Brand already exists",
         )
+    form_data.creator_id = current_user.id
     db_role = Brand.create(form_data)
     return db_role
 

@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Security
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException, status, Security
 
-from ..dependencies import get_db, get_oauth_scheme, get_current_user
+from ..dependencies import get_oauth_scheme, get_current_user
 from ..database import schemas
 from ..models.user import User
 from ..utils import crypt
@@ -22,9 +21,8 @@ async def get_users(
         limit: int = 100,
         include_deleted: bool = False,
         current_user: schemas.User = Security(get_current_user, scopes=["user:list"]),
-        db: Session = Depends(get_db),
 ):
-    users = User.select_all(db, skip=skip, limit=limit)
+    users = User.select_all(skip=skip, limit=limit)
     if not include_deleted:
         users = [user for user in users if not user.deleted_at]
     return users
@@ -35,9 +33,8 @@ async def get_user(
         user_id: int = None,
         include_deleted: bool = False,
         current_user: schemas.User = Security(get_current_user, scopes=["user:info"]),
-        db: Session = Depends(get_db),
 ):
-    user = User.select_one(db, user_id)
+    user = User.select_one(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -56,15 +53,15 @@ async def get_user(
 async def create_user(
         form_data: schemas.UserCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["user:create"]),
-        db: Session = Depends(get_db),
 ):
-    db_user = User.select_one_by_username(db, form_data.username)
+    db_user = User.select_one_by_username(form_data.username)
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Username already exists",
         )
-    db_user = User.create(db, form_data)
+    form_data.creator_id = current_user.id
+    db_user = User.create(form_data)
     return db_user
 
 
@@ -73,9 +70,8 @@ async def update_user(
         user_id: int,
         form_data: schemas.UpdateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["user:update"]),
-        db: Session = Depends(get_db),
 ):
-    db_user = User.select_one(db, user_id)
+    db_user = User.select_one(user_id)
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -89,7 +85,7 @@ async def update_user(
     if form_data.key == "password":
         form_data.key = "hashed_password"
         form_data.value = crypt.hash_password(form_data.value)
-    db_user = User.update(db, db_user, form_data)
+    db_user = User.update(db_user.id, form_data)
     return db_user
 
 
@@ -97,13 +93,12 @@ async def update_user(
 async def delete_user(
         user_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["user:delete"]),
-        db: Session = Depends(get_db),
 ):
-    db_user = User.select_one(db, user_id)
+    db_user = User.select_one(user_id)
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not exists",
         )
-    db_user = User.delete(db, user_id)
+    db_user = User.delete(user_id)
     return db_user

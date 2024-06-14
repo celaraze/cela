@@ -43,7 +43,7 @@ class UserHasRole(Base):
     id = Column(Integer, primary_key=True, comment="ID")
     user_id = Column(Integer, comment="用户 ID")
     role_id = Column(Integer, comment="角色 ID")
-    creator_id = Column(Integer, nullable=True, comment="创建者 ID")
+    creator_id = Column(Integer, comment="创建者 ID")
     created_at = Column(DateTime, nullable=True, comment="创建时间")
     deleted_at = Column(DateTime, nullable=True, comment="删除时间")
 

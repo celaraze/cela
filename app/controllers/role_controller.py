@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Security
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException, status, Security
 
-from ..dependencies import get_db, get_oauth_scheme, get_current_user
+from ..dependencies import get_oauth_scheme, get_current_user
 from ..database import schemas
 from ..models.role import Role
 
@@ -20,9 +19,8 @@ async def get_roles(
         skip: int = 0,
         limit: int = 100,
         current_user: schemas.User = Security(get_current_user, scopes=["role:list"]),
-        db: Session = Depends(get_db),
 ):
-    roles = Role.select_all(db, skip=skip, limit=limit)
+    roles = Role.select_all(skip=skip, limit=limit)
     return roles
 
 
@@ -30,9 +28,8 @@ async def get_roles(
 async def get_role(
         role_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["role:info"]),
-        db: Session = Depends(get_db),
 ):
-    role = Role.select_one(db, role_id)
+    role = Role.select_one(role_id)
     if not role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -45,15 +42,15 @@ async def get_role(
 async def create_role(
         form_data: schemas.RoleCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["role:create"]),
-        db: Session = Depends(get_db),
 ):
-    db_role = Role.select_one_by_name(db, form_data.name)
+    db_role = Role.select_one_by_name(form_data.name)
     if db_role:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Role already exists",
         )
-    db_role = Role.create(db, form_data)
+    form_data.creator_id = current_user.id
+    db_role = Role.create(form_data)
     return db_role
 
 
@@ -62,15 +59,14 @@ async def update_role(
         role_id: int,
         form_data: schemas.UpdateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["role:update"]),
-        db: Session = Depends(get_db),
 ):
-    db_role = Role.select_one(db, role_id)
+    db_role = Role.select_one(role_id)
     if not db_role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Role not exists",
         )
-    db_role = Role.update(db, db_role, form_data)
+    db_role = Role.update(db_role.id, form_data)
     return db_role
 
 
@@ -78,13 +74,12 @@ async def update_role(
 async def delete_role(
         role_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["role:delete"]),
-        db: Session = Depends(get_db),
 ):
-    db_role = Role.select_one(db, role_id)
+    db_role = Role.select_one(role_id)
     if not db_role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Role not exists",
         )
-    db_role = Role.delete(db, role_id)
+    db_role = Role.delete(role_id)
     return db_role
