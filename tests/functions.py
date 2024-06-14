@@ -3,7 +3,6 @@ from typing import Union
 from fastapi.testclient import TestClient
 from httpx import Response
 from app.database import schemas
-from app.config.database import SessionLocal
 from app.services import auth
 
 from app.main import app
@@ -11,16 +10,15 @@ from app.main import app
 client = TestClient(app)
 
 
-def create_admin(user: schemas.UserForm):
-    db = SessionLocal()
-    user_create = schemas.UserForm(
+def create_admin(user: schemas.UserCreateForm):
+    user_create = schemas.UserCreateForm(
         email=user.email,
         name=user.name,
         password=user.password,
         username=user.username,
         creator_id=user.creator_id,
     )
-    auth.create_super_admin(db, user_create)
+    auth.create_super_admin(user_create)
 
 
 def login(username: str, password: str) -> Response:
@@ -169,5 +167,42 @@ def delete_user_has_role(access_token: str, user_has_role_id: id) -> Response:
 def delete_user_has_role_by_user_id_and_role_id(access_token: str, user_id: id, role_id: id) -> Response:
     return client.delete(
         f"/user_has_roles/{user_id}/{role_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def create_brand(access_token: str, form_data: dict) -> Response:
+    return client.post(
+        f"/brands",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data
+    )
+
+
+def select_brands(access_token: str) -> Response:
+    return client.get(
+        f"/brands",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def select_brand(access_token: str, brand_id: id) -> Response:
+    return client.get(
+        f"/brands/{brand_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def update_brand(access_token: str, brand_id: id, form_data: dict) -> Response:
+    return client.put(
+        f"/brands/{brand_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data
+    )
+
+
+def delete_brand(access_token: str, brand_id: id) -> Response:
+    return client.delete(
+        f"/brands/{brand_id}",
         headers={"Authorization": f"Bearer {access_token}"},
     )

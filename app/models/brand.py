@@ -3,14 +3,14 @@ from ..database import tables, schemas
 from ..models.base import BaseModel
 
 db = SessionLocal()
-table = tables.Role
-schema = schemas.Role
+table = tables.Brand
+schema = schemas.Brand
 
 
-class Role:
+class Brand:
     @staticmethod
-    def select_one(user_id: int):
-        return BaseModel.select_one(table, user_id)
+    def select_one(brand_id: int):
+        return BaseModel.select_one(table, brand_id)
 
     @staticmethod
     def select_one_by_name(name: str):
@@ -28,9 +28,9 @@ class Role:
         return BaseModel.create(table, form_data)
 
     @staticmethod
-    def update(user_id, form_data: schemas.UpdateForm):
-        return BaseModel.update(table, user_id, form_data)
+    def update(brand_id, form_data: schemas.UpdateForm):
+        return BaseModel.update(table, brand_id, form_data)
 
     @staticmethod
-    def delete(user_id: int):
-        return BaseModel.delete(table, user_id)
+    def delete(brand_id: int):
+        return BaseModel.delete(table, brand_id)

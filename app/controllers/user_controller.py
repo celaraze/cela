@@ -54,7 +54,7 @@ async def get_user(
 
 @router.post("/")
 async def create_user(
-        form_data: schemas.UserForm,
+        form_data: schemas.UserCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["user:create"]),
         db: Session = Depends(get_db),
 ):

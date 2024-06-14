@@ -24,7 +24,7 @@ def test_start():
     global user_id
     global role_id
 
-    form_data = schemas.UserForm(
+    form_data = schemas.UserCreateForm(
         email="test_admin@test.com",
         name="test_admin",
         password="test_admin",

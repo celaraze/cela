@@ -10,7 +10,7 @@ client = TestClient(app)
 
 admin_access_token = ""
 user_access_token = ""
-role_id = 0
+brand_id = 0
 
 
 def test_start():
@@ -34,61 +34,52 @@ def test_start():
 
 
 def test_create():
-    global role_id
+    global brand_id
 
     form_data = {
-        "name": "test_role",
-        "scopes": ["test:read"],
+        "name": "test_brand",
     }
-    response = functions.create_role(admin_access_token, form_data)
+    response = functions.create_brand(admin_access_token, form_data)
     assert response.status_code == 200
-    role_id = response.json()['id']
+    brand_id = response.json()['id']
 
-    response = functions.create_role(admin_access_token, form_data)
+    response = functions.create_brand(admin_access_token, form_data)
     assert response.status_code == 409
 
 
 def test_select():
-    response = functions.select_roles(admin_access_token)
+    response = functions.select_brands(admin_access_token)
     assert response.status_code == 200
 
-    response = functions.select_role(admin_access_token, 0)
+    response = functions.select_brand(admin_access_token, 0)
     assert response.status_code == 404
 
-    response = functions.select_role(admin_access_token, role_id)
+    response = functions.select_brand(admin_access_token, brand_id)
     assert response.status_code == 200
-    assert response.json()['name'] == "test_role"
+    assert response.json()['name'] == "test_brand"
 
 
 def test_update():
     form_data = {
         "key": "name",
-        "value": "test_role2",
+        "value": "test_brand2",
     }
 
-    response = functions.update_role(admin_access_token, 0, form_data)
+    response = functions.update_brand(admin_access_token, 0, form_data)
     assert response.status_code == 404
 
-    response = functions.update_role(admin_access_token, role_id, form_data)
+    response = functions.update_brand(admin_access_token, brand_id, form_data)
     assert response.status_code == 200
-    assert response.json()['name'] == "test_role2"
-
-    form_data = {
-        "key": "scopes",
-        "value": ["test:read", "test:write"],
-    }
-    response = functions.update_role(admin_access_token, role_id, form_data)
-    assert response.status_code == 200
-    assert response.json()['scopes'] == ["test:read", "test:write"]
+    assert response.json()['name'] == "test_brand2"
 
 
 def test_delete():
-    response = functions.delete_role(admin_access_token, 0)
+    response = functions.delete_brand(admin_access_token, 0)
     assert response.status_code == 404
 
-    response = functions.delete_role(admin_access_token, role_id)
+    response = functions.delete_brand(admin_access_token, brand_id)
     assert response.status_code == 200
-    response = functions.select_role(admin_access_token, role_id)
+    response = functions.delete_brand(admin_access_token, brand_id)
     assert response.status_code == 404
 
 

@@ -16,7 +16,7 @@ def test_start():
     tables.Base.metadata.drop_all(bind=engine)
     tables.Base.metadata.create_all(bind=engine)
 
-    user_create = schemas.UserForm(
+    user_create = schemas.UserCreateForm(
         email="test_admin@test.com",
         name="test_admin",
         password="test_admin",

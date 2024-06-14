@@ -2,7 +2,6 @@ from datetime import timedelta, datetime, timezone
 from typing import Union
 
 from jose import jwt
-from sqlalchemy.orm import Session
 
 from ..models.user import User
 from ..models.role import Role
@@ -32,9 +31,8 @@ def decode_access_token(token: str):
 def authenticate(
         username: str,
         password: str,
-        db: Session
 ) -> Union[schemas.User, bool]:
-    user = User.select_one_by_username(db, username)
+    user = User.select_one_by_username(username)
     if not user:
         return False
     if not crypt.verify_hashed_password(password, user.hashed_password):
@@ -42,29 +40,29 @@ def authenticate(
     return user
 
 
-def create_super_admin(db: Session, form_data: schemas.UserForm):
+def create_super_admin(form_data: schemas.UserCreateForm):
     try:
-        role = Role.select_one_by_name(db, "superuser")
+        role = Role.select_one_by_name("superuser")
         if not role:
             print("Creating a superuser role.")
-            role_create = schemas.RoleForm(
+            role_create = schemas.RoleCreateForm(
                 name="superuser",
                 scopes=["su"]
             )
-            role = Role.create(db, role_create)
+            role = Role.create(role_create)
             print("Superuser role created successfully.")
         else:
             print("Superuser role already exists.")
-        user = User.create(db, form_data)
+        user = User.create(form_data)
         if not user:
             print("Error creating super user.")
             return
 
-        user_has_role = schemas.UserHasRoleForm(
+        user_has_role = schemas.UserHasRoleCreateForm(
             user_id=user.id,
             role_id=role.id,
         )
-        user_has_role = UserHasRole.create(db, user_has_role)
+        user_has_role = UserHasRole.create(user_has_role)
         if user_has_role:
             print("User has superuser role.")
 
@@ -72,13 +70,3 @@ def create_super_admin(db: Session, form_data: schemas.UserForm):
     except Exception as e:
         print("Error creating super admin.")
         print(e)
-
-
-def get_scopes(user: schemas.User):
-    scopes = []
-    roles = user.roles
-    for role in roles:
-        scopes_array = role.scopes
-        for scope in scopes_array:
-            scopes.append(scope)
-    return scopes

@@ -1,19 +1,17 @@
 import argparse
 
 from app.services import auth
-from app.config.database import SessionLocal, engine
+from app.config.database import engine
 from .database import schemas, tables
 
 
 def create_super_admin():
-    db = SessionLocal()
     username = input("Enter username: ")
     email = input("Enter email: ")
     name = input("Enter name: ")
     password = input("Enter password: ")
     auth.create_super_admin(
-        db,
-        schemas.UserForm(
+        schemas.UserCreateForm(
             username=username,
             email=email,
             name=name,

@@ -1,5 +1,30 @@
 # Cela
 
+English | [简体中文](README/README.zh_CN.md)
+
+Cela is an asset management system with front-end and back-end separation, and provides a command-line client. Users can
+use the command-line client to manage assets, or use their own built front-end program.
+
+Cela has the following features:
+
+- User authentication using `bearer` token.
+- Permission control using scopes and RBAC.
+- Efficient deployment mode, deployed in a containerized way.
+- Convenient secondary development, users only need to focus on the implementation of business logic.
+- Complete test cases.
+- Inherited from the design pattern of chemex and cat.
+- ...
+
+## Quick Start
+
+Start back-end service with the following steps:
+
+`docker run -d -p 8000:8000 --name cela celaraze/cela:latest`
+
+Now you can visit [http://localhost:8000/docs](http://localhost:8000/docs) to view the API documentation.
+
+Tips: The image cannot be used now, because it still needs to be developed.
+
 ## Directory Structure
 
 ```shell

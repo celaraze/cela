@@ -1,6 +1,5 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
-from sqlalchemy.orm import Session
 
 from .database import schemas
 from .models.user import User
@@ -47,7 +46,6 @@ def get_oauth_scheme():
 async def get_current_user(
         security_scopes: SecurityScopes,
         token: str = Depends(get_oauth_scheme()),
-        db: Session = Depends(get_db)
 ):
     if security_scopes.scopes:
         authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
@@ -67,7 +65,7 @@ async def get_current_user(
         token_data = schemas.AuthTokenData(username=username, scopes=token_scopes)
     except Exception:
         raise credentials_exception
-    user = User.select_one_by_username(db=db, username=token_data.username)
+    user = User.select_one_by_username(token_data.username)
 
     if user is None:
         raise credentials_exception

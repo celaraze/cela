@@ -27,7 +27,7 @@ async def get_roles(
 
 
 @router.get("/{role_id}")
-async def get_roles(
+async def get_role(
         role_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["role:info"]),
         db: Session = Depends(get_db),
@@ -43,7 +43,7 @@ async def get_roles(
 
 @router.post("/")
 async def create_role(
-        form_data: schemas.RoleForm,
+        form_data: schemas.RoleCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["role:create"]),
         db: Session = Depends(get_db),
 ):

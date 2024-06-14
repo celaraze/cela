@@ -50,7 +50,7 @@ async def get_user_has_role(
 
 @router.post("/")
 async def create_user_has_role(
-        form_data: schemas.UserHasRoleForm,
+        form_data: schemas.UserHasRoleCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:create"]),
         db: Session = Depends(get_db),
 ):
