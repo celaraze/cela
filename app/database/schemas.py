@@ -60,6 +60,21 @@ class FootprintCreateForm(BaseSchema):
     creator_id: int
 
 
+class DeviceCreateForm(BaseSchema):
+    id: int
+    hostname: str
+    asset_number: str
+    ipv4_address: Union[str, None]
+    ipv6_address: Union[str, None]
+    mac_address: Union[str, None]
+    description: Union[str, None]
+    brand_id: int
+    category_id: int
+    creator_id: int
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
+
+
 # Model schemas #
 class Role(BaseSchema):
     id: int

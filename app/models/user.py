@@ -1,4 +1,3 @@
-from ..config.database import SessionLocal
 from ..database import tables, schemas
 from ..utils import common, crypt
 from ..models.base import BaseModel

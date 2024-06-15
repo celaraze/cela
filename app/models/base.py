@@ -1,4 +1,3 @@
-from ..config.database import SessionLocal
 from ..database import schemas
 from ..utils import common
 

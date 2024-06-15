@@ -1,6 +1,7 @@
 > [!IMPORTANT]
 >
-> This project is still working in progress. Please go to [CAT](https://github.com/celaraze/cat) or [CHEMEX](https://github.com/celaraze/chemex) for using in production.
+> This project is still working in progress. Please go to [CAT](https://github.com/celaraze/cat)
+> or [CHEMEX](https://github.com/celaraze/chemex) for using in production.
 
 # Cela
 
