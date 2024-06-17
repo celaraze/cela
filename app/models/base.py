@@ -1,31 +1,23 @@
 from ..database import schemas
-from ..utils import common
 
 
 class BaseModel:
     @staticmethod
     def select_one(db, table, model_id: int):
-        return (
-            db.query(table)
-            .filter(table.id.__eq__(model_id))
-            .first()
-        )
+        db_query = db.query(table).filter(table.id.__eq__(model_id))
+        return db_query.first()
 
     @staticmethod
-    def select_one_by_columns(db, table, column_values: dict):
+    def select_one_by_columns(db, table, column_values: dict, ):
         db_query = db.query(table)
         for column, value in column_values.items():
             db_query = db_query.filter(getattr(table, column).__eq__(value))
         return db_query.first()
 
     @staticmethod
-    def select_all(db, table, skip: int = 0, limit: int = 100):
-        return (
-            db.query(table)
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+    def select_all(db, table, skip: int = 0, limit: int = 100, ):
+        db_query = db.query(table)
+        return db_query.offset(skip).limit(limit).all()
 
     @staticmethod
     def select_all_by_columns(db, table, column_values: dict):
@@ -35,9 +27,15 @@ class BaseModel:
         return db_query.all()
 
     @staticmethod
+    def select_all_advanced(db, table, conditions: list[schemas.QueryForm]):
+        db_query = db.query(table)
+        for condition in conditions:
+            db_query = db_query.filter(getattr(table, condition.key).__eq__(condition.value))
+        return db_query.all()
+
+    @staticmethod
     def create(db, table, form_data):
         model_dict = form_data.model_dump()
-        model_dict["created_at"] = common.now()
         db_record = table(
             **model_dict,
         )

@@ -1,5 +1,5 @@
 from ..database import tables, schemas
-from ..utils import common, crypt
+from ..utils import crypt
 from ..models.base import BaseModel
 from ..models.user_has_role import UserHasRole
 from ..models.role import Role
@@ -32,12 +32,15 @@ class User:
         return BaseModel.select_all(db, table, skip, limit)
 
     @staticmethod
+    def select_all_advanced(db, conditions: list[schemas.QueryForm]):
+        return BaseModel.select_all_advanced(db, table, conditions)
+
+    @staticmethod
     def create(db, form_data):
         model_dict = form_data.model_dump()
         hashed_password = crypt.hash_password(model_dict["password"])
         model_dict["hashed_password"] = hashed_password
         model_dict.pop("password")
-        model_dict["created_at"] = common.now()
         db_record = table(
             **model_dict,
         )

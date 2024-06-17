@@ -40,6 +40,16 @@ async def get_brand(
     return brand
 
 
+@router.post("/advance_query")
+async def get_brands_advance_query(
+        db: databaseSession,
+        form_data: list[schemas.QueryForm],
+        current_user: schemas.User = Security(get_current_user, scopes=["brand:list"]),
+):
+    brands = Brand.select_all_advanced(db, form_data)
+    return brands
+
+
 @router.post("/")
 async def create_brand(
         db: databaseSession,

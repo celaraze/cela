@@ -47,6 +47,16 @@ async def get_user_has_role(
     return user_has_role
 
 
+@router.post("/advance_query")
+async def get_user_has_roles_advance_query(
+        db: databaseSession,
+        form_data: list[schemas.QueryForm],
+        current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:list"]),
+):
+    user_has_roles = UserHasRole.select_all_advanced(db, form_data)
+    return user_has_roles
+
+
 @router.post("/")
 async def create_user_has_role(
         db: databaseSession,

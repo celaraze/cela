@@ -1,7 +1,9 @@
 from datetime import datetime
-from typing import Union
+from typing import Union, Any
 
 from pydantic import BaseModel as BaseSchema
+
+from app.utils import common
 
 
 # schema for decoding token
@@ -10,16 +12,22 @@ class AuthTokenData(BaseSchema):
     scopes: list[str] = []
 
 
-# Form schemas #
+# form schemas #
 class UpdateForm(BaseSchema):
     key: str
     value: Union[str, list[str]]
+
+
+class QueryForm(BaseSchema):
+    key: str
+    value: Any
 
 
 class RoleCreateForm(BaseSchema):
     name: str
     scopes: list[str] = []
     creator_id: int = 0
+    created_at: datetime = common.now()
 
 
 class UserChangePasswordForm(BaseSchema):
@@ -33,22 +41,26 @@ class UserCreateForm(BaseSchema):
     name: str
     password: str
     creator_id: int = 0
+    created_at: datetime = common.now()
 
 
 class BrandCreateForm(BaseSchema):
     name: str
     creator_id: int = 0
+    created_at: datetime = common.now()
 
 
 class DeviceCategoryCreateForm(BaseSchema):
     name: str
     creator_id: int = 0
+    created_at: datetime = common.now()
 
 
 class UserHasRoleCreateForm(BaseSchema):
     user_id: int
     role_id: int
     creator_id: int = 0
+    created_at: datetime = common.now()
 
 
 class UserHasDeviceCreateForm(BaseSchema):
@@ -59,6 +71,7 @@ class UserHasDeviceCreateForm(BaseSchema):
     expired_at: Union[datetime, None] = None
     returned_at: Union[datetime, None] = None
     creator_id: int = 0
+    created_at: datetime = common.now()
 
 
 class FootprintCreateForm(BaseSchema):
@@ -68,6 +81,7 @@ class FootprintCreateForm(BaseSchema):
     response_status_code: int
     response_body: str
     creator_id: int = 0
+    created_at: datetime = common.now()
 
 
 class DeviceCreateForm(BaseSchema):
@@ -80,9 +94,10 @@ class DeviceCreateForm(BaseSchema):
     brand_id: int
     category_id: int
     creator_id: int = 0
+    created_at: datetime = common.now()
 
 
-# Model schemas #
+# model schemas #
 class Role(BaseSchema):
     id: int
     name: str

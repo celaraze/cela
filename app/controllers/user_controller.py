@@ -20,12 +20,9 @@ async def get_users(
         db: databaseSession,
         skip: int = 0,
         limit: int = 100,
-        include_deleted: bool = False,
         current_user: schemas.User = Security(get_current_user, scopes=["user:list"]),
 ):
     users = User.select_all(db, skip=skip, limit=limit)
-    if not include_deleted:
-        users = [user for user in users if not user.deleted_at]
     return users
 
 
@@ -49,6 +46,16 @@ async def get_user(
                 detail="User not exists",
             )
     return user
+
+
+@router.post("/advance_query")
+async def get_users_advance_query(
+        db: databaseSession,
+        form_data: list[schemas.QueryForm],
+        current_user: schemas.User = Security(get_current_user, scopes=["user:list"]),
+):
+    users = User.select_all_advanced(db, form_data)
+    return users
 
 
 @router.post("/", response_model=schemas.User)

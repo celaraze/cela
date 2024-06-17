@@ -22,6 +22,10 @@ class Device:
         return BaseModel.select_all(db, table, skip, limit)
 
     @staticmethod
+    def select_all_advanced(db, conditions: list[schemas.QueryForm]):
+        return BaseModel.select_all_advanced(db, table, conditions)
+
+    @staticmethod
     def create(db, form_data):
         return BaseModel.create(db, table, form_data)
 

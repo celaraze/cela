@@ -40,6 +40,16 @@ async def get_device_category(
     return device_category
 
 
+@router.post("/advance_query")
+async def get_device_categories_advance_query(
+        db: databaseSession,
+        form_data: list[schemas.QueryForm],
+        current_user: schemas.User = Security(get_current_user, scopes=["device_category:list"]),
+):
+    device_categories = DeviceCategory.select_all_advanced(db, form_data)
+    return device_categories
+
+
 @router.post("/")
 async def create_device_category(
         db: databaseSession,

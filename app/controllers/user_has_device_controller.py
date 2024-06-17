@@ -47,6 +47,16 @@ async def get_user_has_device(
     return user_has_device
 
 
+@router.post("/advance_query")
+async def get_user_has_devices_advance_query(
+        db: databaseSession,
+        form_data: list[schemas.QueryForm],
+        current_user: schemas.User = Security(get_current_user, scopes=["user_has_device:list"]),
+):
+    user_has_devices = UserHasDevice.select_all_advanced(db, form_data)
+    return user_has_devices
+
+
 @router.post("/")
 async def create_user_has_device(
         db: databaseSession,
