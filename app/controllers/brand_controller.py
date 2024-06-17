@@ -98,3 +98,35 @@ async def delete_brand(
         )
     db_brand = Brand.delete(db, brand_id)
     return db_brand
+
+
+@router.put("/{brand_id}/restore")
+async def restore_brand(
+        db: databaseSession,
+        brand_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["brand:restore"]),
+):
+    db_brand = Brand.select_one_with_trashed(db, brand_id)
+    if not db_brand:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Brand not exists",
+        )
+    db_brand = Brand.restore(db, brand_id)
+    return db_brand
+
+
+@router.delete("/{brand_id}/force")
+async def force_delete_brand(
+        db: databaseSession,
+        brand_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["brand:force-delete"]),
+):
+    db_brand = Brand.select_one_with_trashed(db, brand_id)
+    if not db_brand:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Brand not exists",
+        )
+    db_brand = Brand.force_delete(db, brand_id)
+    return db_brand

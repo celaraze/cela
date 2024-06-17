@@ -13,6 +13,7 @@ class Footprint(Base):
     response_body = Column(JSON, nullable=True, comment="响应体")
     creator_id = Column(Integer, nullable=True, comment="创建者 ID")
     created_at = Column(DateTime, comment="创建时间")
+    deleted_at = Column(DateTime, nullable=True, comment="删除时间")
 
 
 class User(Base):

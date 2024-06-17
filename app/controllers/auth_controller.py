@@ -3,8 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from ..dependencies import get_current_user, databaseSession
 from ..services.auth import authenticate, create_access_token
-from ..database import schemas
-from ..models.user import User
+from ..database import schemas, crud
 from ..utils import crypt
 
 router = APIRouter(

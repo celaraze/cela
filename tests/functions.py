@@ -1,3 +1,5 @@
+from typing import Union
+
 from fastapi.testclient import TestClient
 from httpx import Response
 
@@ -90,6 +92,14 @@ def select_users(access_token: str) -> Response:
     )
 
 
+def select_users_advance_query(access_token: str, params: list[dict] = None) -> Response:
+    return client.post(
+        f"/users/advance_query",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=params
+    )
+
+
 def create_user(access_token: str, form_data: dict) -> Response:
     return client.post(
         f"/users",
@@ -127,6 +137,14 @@ def select_roles(access_token: str) -> Response:
     )
 
 
+def select_roles_advance_query(access_token: str, params: list[dict] = None) -> Response:
+    return client.post(
+        f"/roles/advance_query",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=params
+    )
+
+
 def create_role(access_token: str, form_data: dict) -> Response:
     return client.post(
         f"/roles",
@@ -161,6 +179,14 @@ def select_user_has_role(access_token: str, user_has_role_id: id) -> Response:
     return client.get(
         f"/user_has_roles/{user_has_role_id}",
         headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def select_user_has_roles_advance_query(access_token: str, params: list[dict] = None) -> Response:
+    return client.post(
+        f"/user_has_roles/advance_query",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=params
     )
 
 
@@ -208,6 +234,14 @@ def select_brand(access_token: str, brand_id: id) -> Response:
     )
 
 
+def select_brands_advance_query(access_token: str, params: list[dict] = None) -> Response:
+    return client.post(
+        f"/brands/advance_query",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=params
+    )
+
+
 def update_brand(access_token: str, brand_id: id, form_data: dict) -> Response:
     return client.put(
         f"/brands/{brand_id}",
@@ -245,6 +279,14 @@ def select_device_category(access_token: str, device_category_id: id) -> Respons
     )
 
 
+def select_device_categories_advance_query(access_token: str, params: list[dict] = None) -> Response:
+    return client.post(
+        f"/device_categories/advance_query",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=params
+    )
+
+
 def update_device_category(access_token: str, device_category_id: id, form_data: dict) -> Response:
     return client.put(
         f"/device_categories/{device_category_id}",
@@ -268,10 +310,10 @@ def create_device(access_token: str, form_data: dict) -> Response:
     )
 
 
-def select_devices(access_token: str, params: dict = None) -> Response:
+def select_devices(access_token: str, asset_number: Union[str, None] = None) -> Response:
     query = ""
-    if params:
-        query = "&".join([f"{key}={value}" for key, value in params.items()])
+    if asset_number:
+        query = f"asset_number={asset_number}"
     return client.get(
         f"/devices?" + query,
         headers={"Authorization": f"Bearer {access_token}"},
@@ -282,6 +324,14 @@ def select_device(access_token: str, device_id: id) -> Response:
     return client.get(
         f"/devices/{device_id}",
         headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def select_devices_advance_query(access_token: str, params: list[dict] = None) -> Response:
+    return client.post(
+        f"/devices/advance_query",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=params
     )
 
 
@@ -326,6 +376,14 @@ def select_user_has_device_by_user_id_and_device_id(access_token: str, user_id: 
     return client.get(
         f"/user_has_devices/{user_id}/{device_id}",
         headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def select_user_has_devices_advance_query(access_token: str, params: list[dict] = None) -> Response:
+    return client.post(
+        f"/user_has_devices/advance_query",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=params
     )
 
 

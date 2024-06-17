@@ -3,10 +3,7 @@ from typing import Union
 
 from jose import jwt
 
-from ..models.user import User
-from ..models.role import Role
-from ..models.user_has_role import UserHasRole
-from ..database import schemas
+from ..database import schemas, crud, tables
 from ..utils import crypt
 from ..utils.config import get_jwt_config
 
@@ -33,28 +30,28 @@ def authenticate(
         username: str,
         password: str,
 ) -> Union[schemas.User, bool]:
-    user = User.select_one_by_username(db, username)
-    if not user:
+    users = crud.select_by_username(db, tables.User, username)
+    if not users:
         return False
-    if not crypt.verify_hashed_password(password, user.hashed_password):
+    if not crypt.verify_hashed_password(password, users[0].hashed_password):
         return False
-    return user
+    return users[0]
 
 
 def create_super_admin(db, form_data: schemas.UserCreateForm):
     try:
-        role = Role.select_one_by_name(db, "superuser")
-        if not role:
+        roles = crud.select_by_name(db, tables.Role, "superuser")
+        if not roles:
             print("Creating a superuser role.")
             role_create = schemas.RoleCreateForm(
                 name="superuser",
                 scopes=["su"]
             )
-            role = Role.create(db, role_create)
+            role = crud.create(db, tables.Role, role_create)
             print("Superuser role created successfully.")
         else:
             print("Superuser role already exists.")
-        user = User.create(db, form_data)
+        user = crud.create(db, tables.User, form_data)
         if not user:
             print("Error creating super user.")
             return

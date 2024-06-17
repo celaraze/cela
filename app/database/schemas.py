@@ -20,6 +20,7 @@ class UpdateForm(BaseSchema):
 
 class QueryForm(BaseSchema):
     key: str
+    operator: str
     value: Any
 
 
@@ -135,6 +136,7 @@ class Footprint(BaseSchema):
     response_body: dict
     creator_id: int
     created_at: datetime
+    deleted_at: Union[datetime, None]
 
     class Config:
         from_attributes = True

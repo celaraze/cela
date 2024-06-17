@@ -30,28 +30,38 @@ def get_oauth_scheme():
             "role:create": "Create new role.",
             "role:update": "Update role.",
             "role:delete": "Delete role.",
+            "role:restore": "Restore role.",
+            "role:force-delete": "Force delete role.",
 
             "user:list": "Read information about users.",
             "user:info": "Read information about one user.",
             "user:create": "Create new user.",
             "user:update": "Update user.",
             "user:delete": "Delete user.",
+            "user:restore": "Restore user.",
+            "user:force-delete": "Force delete user.",
 
             "user_has_role:list": "Read information about user roles.",
             "user_has_role:info": "Read information about one user role.",
             "user_has_role:create": "Create user role.",
             "user_has_role:delete": "Delete user role.",
+            "user_has_role:restore": "Restore user role.",
+            "user_has_role:force-delete": "Force delete user role.",
 
             "device:list": "Read information about devices.",
             "device:info": "Read information about one device.",
             "device:create": "Create new device.",
             "device:update": "Update device.",
             "device:delete": "Delete device.",
+            "device:restore": "Restore device.",
+            "device:force-delete": "Force delete device.",
 
             "user_has_device:list": "Read information about user devices.",
             "user_has_device:info": "Read information about one user device.",
             "user_has_device:create": "Create user device",
             "user_has_device:delete": "Delete user device.",
+            "user_has_device:restore": "Restore user device.",
+            "user_has_device:force-delete": "Force delete user device.",
         }
     )
 
