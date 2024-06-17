@@ -19,7 +19,7 @@ async def get_device_categories(
         db: databaseSession,
         skip: int = 0,
         limit: int = 100,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:list"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["device_category:list"]),
 ):
     device_categories = DeviceCategory.select_all(db, skip=skip, limit=limit)
     return device_categories
@@ -29,7 +29,7 @@ async def get_device_categories(
 async def get_device_category(
         db: databaseSession,
         device_category_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:info"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["device_category:info"]),
 ):
     device_category = DeviceCategory.select_one(db, device_category_id)
     if not device_category:
@@ -44,7 +44,7 @@ async def get_device_category(
 async def create_device_category(
         db: databaseSession,
         form_data: schemas.DeviceCategoryCreateForm,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:create"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["device_category:create"]),
 ):
     db_device_category = DeviceCategory.select_one_by_name(db, form_data.name)
     if db_device_category:
@@ -62,7 +62,7 @@ async def update_device_category(
         db: databaseSession,
         device_category_id: int,
         form_data: schemas.UpdateForm,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:update"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["device_category:update"]),
 ):
     db_device_category = DeviceCategory.select_one(db, device_category_id)
     if not db_device_category:
@@ -78,7 +78,7 @@ async def update_device_category(
 async def delete_device_category(
         db: databaseSession,
         device_category_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:delete"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["device_category:delete"]),
 ):
     db_device_category = DeviceCategory.select_one(db, device_category_id)
     if not db_device_category:

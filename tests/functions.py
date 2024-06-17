@@ -258,3 +258,43 @@ def delete_device_category(access_token: str, device_category_id: id) -> Respons
         f"/device_categories/{device_category_id}",
         headers={"Authorization": f"Bearer {access_token}"},
     )
+
+
+def create_device(access_token: str, form_data: dict) -> Response:
+    return client.post(
+        f"/devices",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data
+    )
+
+
+def select_devices(access_token: str, params: dict = None) -> Response:
+    query = ""
+    if params:
+        query = "&".join([f"{key}={value}" for key, value in params.items()])
+    return client.get(
+        f"/devices?" + query,
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def select_device(access_token: str, device_id: id) -> Response:
+    return client.get(
+        f"/devices/{device_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def update_device(access_token: str, device_id: id, form_data: dict) -> Response:
+    return client.put(
+        f"/devices/{device_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data
+    )
+
+
+def delete_device(access_token: str, device_id: id) -> Response:
+    return client.delete(
+        f"/devices/{device_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )

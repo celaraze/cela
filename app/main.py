@@ -1,8 +1,15 @@
 from fastapi import FastAPI
 from .database import tables
 from .config.database import engine
-from .controllers import auth_controller, role_controller, user_controller, user_has_role_controller, brand_controller, \
-    device_category_controller
+from .controllers import (
+    auth_controller,
+    role_controller,
+    user_controller,
+    user_has_role_controller,
+    brand_controller,
+    device_category_controller,
+    device_controller
+)
 
 tables.Base.metadata.create_all(bind=engine)
 
@@ -40,3 +47,4 @@ app.include_router(user_controller.router)
 app.include_router(user_has_role_controller.router)
 app.include_router(brand_controller.router)
 app.include_router(device_category_controller.router)
+app.include_router(device_controller.router)

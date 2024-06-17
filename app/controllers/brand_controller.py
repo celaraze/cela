@@ -19,7 +19,7 @@ async def get_brands(
         db: databaseSession,
         skip: int = 0,
         limit: int = 100,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:list"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["brand:list"]),
 ):
     brands = Brand.select_all(db, skip=skip, limit=limit)
     return brands
@@ -29,7 +29,7 @@ async def get_brands(
 async def get_brand(
         db: databaseSession,
         brand_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:info"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["brand:info"]),
 ):
     brand = Brand.select_one(db, brand_id)
     if not brand:
@@ -44,7 +44,7 @@ async def get_brand(
 async def create_brand(
         db: databaseSession,
         form_data: schemas.BrandCreateForm,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:create"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["brand:create"]),
 ):
     db_brand = Brand.select_one_by_name(db, form_data.name)
     if db_brand:
@@ -53,8 +53,8 @@ async def create_brand(
             detail="Brand already exists",
         )
     form_data.creator_id = current_user.id
-    db_role = Brand.create(db, form_data)
-    return db_role
+    db_brand = Brand.create(db, form_data)
+    return db_brand
 
 
 @router.put("/{brand_id}")
@@ -62,7 +62,7 @@ async def update_brand(
         db: databaseSession,
         brand_id: int,
         form_data: schemas.UpdateForm,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:update"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["brand:update"]),
 ):
     db_brand = Brand.select_one(db, brand_id)
     if not db_brand:
@@ -78,7 +78,7 @@ async def update_brand(
 async def delete_brand(
         db: databaseSession,
         brand_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:delete"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["brand:delete"]),
 ):
     db_brand = Brand.select_one(db, brand_id)
     if not db_brand:

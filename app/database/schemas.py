@@ -57,22 +57,19 @@ class FootprintCreateForm(BaseSchema):
     request_body: dict
     response_status_code: int
     response_body: str
-    creator_id: int
+    creator_id: int = 0
 
 
 class DeviceCreateForm(BaseSchema):
-    id: int
     hostname: str
     asset_number: str
-    ipv4_address: Union[str, None]
-    ipv6_address: Union[str, None]
-    mac_address: Union[str, None]
-    description: Union[str, None]
+    ipv4_address: Union[str, None] = None
+    ipv6_address: Union[str, None] = None
+    mac_address: Union[str, None] = None
+    description: Union[str, None] = None
     brand_id: int
     category_id: int
-    creator_id: int
-    created_at: Union[datetime, None]
-    deleted_at: Union[datetime, None]
+    creator_id: int = 0
 
 
 # Model schemas #
