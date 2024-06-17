@@ -103,7 +103,7 @@ async def delete_user_has_device(
     return db_user_has_device
 
 
-@router.delete("/{user_id}/{device_id}")
+@router.delete("/")
 async def delete_user_has_role_by_user_id_and_role_id(
         db: databaseSession,
         user_id: int,

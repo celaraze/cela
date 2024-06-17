@@ -181,7 +181,7 @@ def delete_user_has_role(access_token: str, user_has_role_id: id) -> Response:
 
 def delete_user_has_role_by_user_id_and_role_id(access_token: str, user_id: id, role_id: id) -> Response:
     return client.delete(
-        f"/user_has_roles/{user_id}/{role_id}",
+        f"/user_has_roles?user_id={user_id}&role_id={role_id}",
         headers={"Authorization": f"Bearer {access_token}"},
     )
 
@@ -346,6 +346,6 @@ def delete_user_has_device(access_token: str, user_has_device_id: id) -> Respons
 
 def delete_user_has_device_by_user_id_and_device_id(access_token: str, user_id: id, device_id: id) -> Response:
     return client.delete(
-        f"/user_has_devices/{user_id}/{device_id}",
+        f"/user_has_devices?user_id={user_id}&device_id={device_id}",
         headers={"Authorization": f"Bearer {access_token}"},
     )
