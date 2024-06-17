@@ -298,3 +298,54 @@ def delete_device(access_token: str, device_id: id) -> Response:
         f"/devices/{device_id}",
         headers={"Authorization": f"Bearer {access_token}"},
     )
+
+
+def create_user_has_device(access_token: str, form_data: dict) -> Response:
+    return client.post(
+        f"/user_has_devices",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data
+    )
+
+
+def select_user_has_devices(access_token: str) -> Response:
+    return client.get(
+        f"/user_has_devices",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def select_user_has_device(access_token: str, user_has_device_id: id) -> Response:
+    return client.get(
+        f"/user_has_devices/{user_has_device_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def select_user_has_device_by_user_id_and_device_id(access_token: str, user_id: id, device_id: id) -> Response:
+    return client.get(
+        f"/user_has_devices/{user_id}/{device_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def update_user_has_device(access_token: str, user_has_device_id: id, form_data: dict) -> Response:
+    return client.put(
+        f"/user_has_devices/{user_has_device_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data
+    )
+
+
+def delete_user_has_device(access_token: str, user_has_device_id: id) -> Response:
+    return client.delete(
+        f"/user_has_devices/{user_has_device_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def delete_user_has_device_by_user_id_and_device_id(access_token: str, user_id: id, device_id: id) -> Response:
+    return client.delete(
+        f"/user_has_devices/{user_id}/{device_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )

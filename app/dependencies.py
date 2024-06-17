@@ -41,6 +41,17 @@ def get_oauth_scheme():
             "user_has_role:info": "Read information about one user role.",
             "user_has_role:create": "Create user role.",
             "user_has_role:delete": "Delete user role.",
+
+            "device:list": "Read information about devices.",
+            "device:info": "Read information about one device.",
+            "device:create": "Create new device.",
+            "device:update": "Update device.",
+            "device:delete": "Delete device.",
+
+            "user_has_device:list": "Read information about user devices.",
+            "user_has_device:info": "Read information about one user device.",
+            "user_has_device:create": "Create user device",
+            "user_has_device:delete": "Delete user device.",
         }
     )
 
