@@ -29,19 +29,6 @@ async def get_roles(
     return roles
 
 
-# Get all trashed roles.
-# Reserved for admin.
-@router.get("/trashed")
-async def get_roles_trashed(
-        db: databaseSession,
-        skip: int = 0,
-        limit: int = 100,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:list", "trashed:list"]),
-):
-    roles = crud.select_all_with_trashed(db, tables.Role, skip=skip, limit=limit)
-    return roles
-
-
 # Get role by id.
 @router.get("/{role_id}")
 async def get_role(
@@ -58,18 +45,6 @@ async def get_role(
     return role
 
 
-# Get trashed role by id.
-# Reserved for admin.
-@router.get("/{role_id}/trashed")
-async def get_role_trashed(
-        db: databaseSession,
-        role_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:info", "trashed:info"]),
-):
-    role = crud.select_id(db, tables.Role, role_id, with_trashed=True)
-    return role
-
-
 # Create role.
 @router.post("/")
 async def create_role(
@@ -77,12 +52,6 @@ async def create_role(
         form_data: schemas.RoleCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["role:create"]),
 ):
-    db_role = crud.select_name(db, tables.Role, form_data.name)
-    if db_role:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Role already exists",
-        )
     form_data.creator_id = current_user.id
     db_role = crud.create(db, tables.Role, form_data)
     return db_role
@@ -126,22 +95,4 @@ async def delete_role(
             detail="Role has users, please update them first.",
         )
     db_role = crud.delete(db, tables.Role, role_id)
-    return db_role
-
-
-# Restore role.
-# Reserved for admin.
-@router.put("/{role_id}/restore")
-async def restore_role(
-        db: databaseSession,
-        role_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:update", "trashed:restore"]),
-):
-    db_role = crud.select_id(db, tables.Role, role_id, with_trashed=True)
-    if not db_role:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Role not exists",
-        )
-    db_role = crud.restore(db, tables.Role, role_id)
     return db_role

@@ -31,19 +31,6 @@ async def get_devices(
     return devices
 
 
-# Get all trashed devices.
-# Reserved for admin.
-@router.get("/trashed")
-async def get_devices_trashed(
-        db: databaseSession,
-        skip: int = 0,
-        limit: int = 100,
-        current_user: schemas.User = Security(get_current_user, scopes=["device:list", "trashed:list"]),
-):
-    devices = crud.select_all_with_trashed(db, tables.Device, skip=skip, limit=limit)
-    return devices
-
-
 # Get device by id.
 @router.get("/{device_id}")
 async def get_device(
@@ -59,23 +46,6 @@ async def get_device(
         )
     user = get_user(db, device_id)
     device.user = user
-    return device
-
-
-# Get trashed device by id.
-# Reserved for admin.
-@router.get("/{device_id}/trashed")
-async def get_device_trashed(
-        db: databaseSession,
-        device_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["device:info", "trashed:info"]),
-):
-    device = crud.select_id(db, tables.Device, device_id, with_trashed=True)
-    if not device:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Device not exists",
-        )
     return device
 
 
@@ -114,7 +84,7 @@ async def create_device(
 async def update_device(
         db: databaseSession,
         device_id: int,
-        form_data: [schemas.UpdateForm],
+        form_data: list[schemas.UpdateForm],
         current_user: schemas.User = Security(get_current_user, scopes=["device:update"]),
 ):
     db_device = crud.select_id(db, tables.Device, device_id)
@@ -138,7 +108,7 @@ async def update_device(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Device category not exists",
                 )
-        elif form_data.key == "asset_number":
+        elif form.key == "asset_number":
             raise HTTPException(
                 status_code=status.HTTP_423_LOCKED,
                 detail="Asset number cannot be updated",

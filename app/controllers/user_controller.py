@@ -4,6 +4,7 @@ from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
 from ..database import schemas, crud, tables
 from ..utils import crypt, common
 from ..services.user import get_roles, get_devices
+from ..services.device import returned
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -256,11 +257,11 @@ async def get_user_devices(
 
 
 # Create user's device.
-@router.post("/{user_id}/devices")
+@router.post("/{user_id}/devices/out")
 async def create_user_device(
         db: databaseSession,
         user_id: int,
-        form_data: schemas.UserHasDeviceCreateForm,
+        form_data: schemas.UserHasDeviceCreateOrUpdateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["user_has_device:create"]),
 ):
     if user_id != form_data.user_id:
@@ -289,35 +290,40 @@ async def create_user_device(
             status_code=status.HTTP_409_CONFLICT,
             detail="User device already exists",
         )
+    form_data.creator_id = current_user.id
     db_user_has_device = crud.create(db, tables.UserHasDevice, form_data)
     return db_user_has_device
 
 
-# Delete user's device.
-# User return device.
-@router.delete("/{user_id}/devices/{device_id}")
+# Return user's device.
+@router.post("/{user_id}/devices/in")
 async def delete_user_device(
         db: databaseSession,
         user_id: int,
-        device_id: int,
+        form_data: schemas.UserHasDeviceCreateOrUpdateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["user_has_device:delete"]),
 ):
+    if user_id != form_data.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="User id mismatch",
+        )
     db_user_has_devices = crud.selects(db, tables.UserHasDevice, [
         schemas.QueryForm(key="user_id", operator="==", value=user_id),
-        schemas.QueryForm(key="device_id", operator="==", value=device_id),
+        schemas.QueryForm(key="device_id", operator="==", value=form_data.device_id),
     ])
     if not db_user_has_devices:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User device not exists",
         )
-    # Clone a new record and soft delete old record.
-    new_db_user_has_device = crud.copy_and_soft_delete_old(db, tables.UserHasDevice, db_user_has_devices[0])
-    # Update flag to -1. It means user has returned the device.
-    update_form = [
-        schemas.UpdateForm(key="flag", value=-1),
-        schemas.UpdateForm(key="returned_at", value=common.now()),
-    ]
-    # Delete the new record.
-    new_db_user_has_device = crud.update(db, tables.UserHasDevice, new_db_user_has_device.id, update_form)
-    return crud.delete(db, tables.UserHasDevice, new_db_user_has_device[0].id)
+    result = returned(db, tables.UserHasDevice, db_user_has_devices[0], current_user.id)
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Device is locked",
+        )
+    raise HTTPException(
+        status_code=status.HTTP_200_OK,
+        detail="Device returned",
+    )

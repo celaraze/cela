@@ -29,19 +29,6 @@ async def get_brands(
     return brands
 
 
-# Get all trashed brands.
-# Reserved for admin.
-@router.get("/trashed")
-async def get_brands_trashed(
-        db: databaseSession,
-        skip: int = 0,
-        limit: int = 100,
-        current_user: schemas.User = Security(get_current_user, scopes=["brand:list", "trashed:list"]),
-):
-    brands = crud.select_all_with_trashed(db, tables.Brand, skip=skip, limit=limit)
-    return brands
-
-
 # Get brand by id.
 @router.get("/{brand_id}")
 async def get_brand(
@@ -58,23 +45,6 @@ async def get_brand(
     return brand
 
 
-# Get trashed brand by id.
-# Reserved for admin.
-@router.get("/{brand_id}/trashed")
-async def get_brand(
-        db: databaseSession,
-        brand_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["brand:info", "trashed:info"]),
-):
-    brand = crud.select_id(db, tables.Brand, brand_id, with_trashed=True)
-    if not brand:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Brand not exists",
-        )
-    return brand
-
-
 # Create brand.
 @router.post("/")
 async def create_brand(
@@ -82,12 +52,6 @@ async def create_brand(
         form_data: schemas.BrandCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["brand:create"]),
 ):
-    db_brand = crud.select_name(db, tables.Brand, form_data.name)
-    if db_brand:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Brand already exists",
-        )
     form_data.creator_id = current_user.id
     db_brand = crud.create(db, tables.Brand, form_data)
     return db_brand
@@ -131,22 +95,4 @@ async def delete_brand(
             detail="Brand has devices, please update devices first.",
         )
     db_brand = crud.delete(db, tables.Brand, brand_id)
-    return db_brand
-
-
-# Restore brand.
-# Reserved for admin.
-@router.put("/{brand_id}/restore")
-async def restore_brand(
-        db: databaseSession,
-        brand_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["brand:update", "trashed:restore"]),
-):
-    db_brand = crud.select_id(db, tables.Brand, brand_id, with_trashed=True)
-    if not db_brand:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Brand not exists",
-        )
-    db_brand = crud.restore(db, tables.Brand, brand_id)
     return db_brand

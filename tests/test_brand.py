@@ -40,8 +40,9 @@ def test_create():
     assert response.status_code == 200
     brand_id = response.json()['id']
 
+    # Test duplicate, should success because of name is not unique.
     response = functions.create_brand(admin_access_token, form_data)
-    assert response.status_code == 409
+    assert response.status_code == 200
 
 
 def test_select():
@@ -51,25 +52,18 @@ def test_select():
     response = functions.select_brand(admin_access_token, 0)
     assert response.status_code == 404
 
-    response = functions.delete_brand(admin_access_token, brand_id)
-    assert response.status_code == 200
-
-    response = functions.select_brand(admin_access_token, brand_id)
-    assert response.status_code == 404
-
-    response = functions.restore_brand(admin_access_token, brand_id)
-    assert response.status_code == 200
-
     response = functions.select_brand(admin_access_token, brand_id)
     assert response.status_code == 200
     assert response.json()['name'] == "test_brand"
 
 
 def test_update():
-    form_data = {
-        "key": "name",
-        "value": "test_brand2",
-    }
+    form_data = [
+        {
+            "key": "name",
+            "value": "test_brand2",
+        }
+    ]
 
     response = functions.update_brand(admin_access_token, 0, form_data)
     assert response.status_code == 404
@@ -82,15 +76,6 @@ def test_update():
 def test_delete():
     response = functions.delete_brand(admin_access_token, 0)
     assert response.status_code == 404
-
-    response = functions.delete_brand(admin_access_token, brand_id)
-    assert response.status_code == 200
-
-    response = functions.delete_brand(admin_access_token, brand_id)
-    assert response.status_code == 404
-
-    response = functions.restore_brand(admin_access_token, brand_id)
-    assert response.status_code == 200
 
     form_data = {
         "name": "test_device_category",
@@ -112,14 +97,17 @@ def test_delete():
     response = functions.delete_brand(admin_access_token, brand_id)
     assert response.status_code == 409
 
-    response = functions.force_delete_brand(admin_access_token, brand_id)
-    assert response.status_code == 409
-
     response = functions.delete_device(admin_access_token, device_id)
     assert response.status_code == 200
 
-    response = functions.force_delete_brand(admin_access_token, brand_id)
+    response = functions.delete_brand(admin_access_token, brand_id)
     assert response.status_code == 200
+
+    response = functions.delete_brand(admin_access_token, brand_id)
+    assert response.status_code == 404
+
+    response = functions.select_brand(admin_access_token, brand_id)
+    assert response.status_code == 404
 
 
 def test_end():

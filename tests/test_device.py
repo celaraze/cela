@@ -58,9 +58,7 @@ def test_create():
         "category_id": 1,
     }
     response = functions.create_device(admin_access_token, form_data)
-    print(response.json())
     assert response.status_code == 404
-    assert response.json()['detail'] == "Brand not exists"
 
     form_data = {
         "hostname": "test_device",
@@ -70,7 +68,6 @@ def test_create():
     }
     response = functions.create_device(admin_access_token, form_data)
     assert response.status_code == 404
-    assert response.json()['detail'] == "Device category not exists"
 
     form_data = {
         "hostname": "test_device",
@@ -80,7 +77,6 @@ def test_create():
     }
     response = functions.create_device(admin_access_token, form_data)
     assert response.status_code == 404
-    assert response.json()['detail'] == "Brand not exists"
 
     form_data = {
         "hostname": "test_device",
@@ -126,10 +122,12 @@ def test_select():
 
 
 def test_update():
-    form_data = {
-        "key": "hostname",
-        "value": "test_device2",
-    }
+    form_data = [
+        {
+            "key": "hostname",
+            "value": "test_device2",
+        }
+    ]
 
     response = functions.update_device(admin_access_token, 0, form_data)
     assert response.status_code == 404
@@ -138,10 +136,12 @@ def test_update():
     assert response.status_code == 200
     assert response.json()['hostname'] == "test_device2"
 
-    form_data = {
-        "key": "asset_number",
-        "value": "PC0002",
-    }
+    form_data = [
+        {
+            "key": "asset_number",
+            "value": "PC0002",
+        }
+    ]
     response = functions.update_device(admin_access_token, device_id, form_data)
     assert response.status_code == 423
 
@@ -150,9 +150,34 @@ def test_delete():
     response = functions.delete_device(admin_access_token, 0)
     assert response.status_code == 404
 
-    response = functions.delete_device(admin_access_token, brand_id)
+    form_data = {
+        "user_id": 1,
+        "device_id": device_id,
+        "flag": 1,
+        "message": "test manager",
+        "expired_at": "2022-01-01 00:00:00",
+    }
+    response = functions.user_has_device_out(admin_access_token, 1, form_data)
     assert response.status_code == 200
-    response = functions.delete_device(admin_access_token, brand_id)
+
+    response = functions.delete_device(admin_access_token, device_id)
+    assert response.status_code == 409
+
+    form_data = {
+        "user_id": 1,
+        "device_id": device_id,
+    }
+    response = functions.user_has_device_in(admin_access_token, 1, form_data)
+    print(response.json())
+    assert response.status_code == 200
+
+    response = functions.delete_device(admin_access_token, device_id)
+    assert response.status_code == 200
+
+    response = functions.delete_device(admin_access_token, device_id)
+    assert response.status_code == 404
+
+    response = functions.select_device(admin_access_token, device_id)
     assert response.status_code == 404
 
 

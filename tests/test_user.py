@@ -11,6 +11,9 @@ admin_access_token = ""
 user_access_token = ""
 user_id = 0
 role_id = 0
+device_id = 0
+user_has_role_id = 0
+user_has_device_id = 0
 
 
 def test_start():

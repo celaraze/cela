@@ -1,5 +1,7 @@
 from typing import Any
 
+from sqlalchemy.orm import make_transient
+
 from ..database import schemas
 from ..utils import common, crypt
 
@@ -218,7 +220,9 @@ def restore(
         table,
         primary_id,
 ):
-    update_form = schemas.UpdateForm(key=SOFT_DELETE, value=None)
+    update_form = [
+        schemas.UpdateForm(key=SOFT_DELETE, value=None),
+    ]
     return update(db, table, primary_id, update_form, with_trashed=True)
 
 
@@ -247,25 +251,14 @@ def force_delete_conditions(
 def copy(
         db,
         table,
-        db_record,
+        db_record
 ):
-    db_record_dict = db_record.__dict__
-    db_record_dict.pop(PRIMARY_ID)
-    db_record_dict.pop(SOFT_DELETE)
-    new_db_record = table(**db_record_dict)
+    record_dict = db_record.__dict__.copy()
+    record_dict.pop('_sa_instance_state', None)
+    new_db_record = table(**record_dict)
+    make_transient(new_db_record)
+    new_db_record.id = None
     db.add(new_db_record)
     db.commit()
     db.refresh(new_db_record)
     return new_db_record
-
-
-def copy_and_soft_delete_old(
-        db,
-        table,
-        db_record,
-):
-    db_record = copy(db, table, db_record)
-    if db_record:
-        delete(db, table, getattr(db_record, PRIMARY_ID))
-        return True
-    return False

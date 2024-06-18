@@ -40,8 +40,9 @@ def test_create():
     assert response.status_code == 200
     device_category_id = response.json()['id']
 
+    # Test duplicate, should success because of name is not unique.
     response = functions.create_device_category(admin_access_token, form_data)
-    assert response.status_code == 409
+    assert response.status_code == 200
 
 
 def test_select():
@@ -57,10 +58,12 @@ def test_select():
 
 
 def test_update():
-    form_data = {
-        "key": "name",
-        "value": "test_device_category2",
-    }
+    form_data = [
+        {
+            "key": "name",
+            "value": "test_device_category2",
+        }
+    ]
 
     response = functions.update_device_category(admin_access_token, 0, form_data)
     assert response.status_code == 404
@@ -74,10 +77,36 @@ def test_delete():
     response = functions.delete_device_category(admin_access_token, 0)
     assert response.status_code == 404
 
+    form_data = {
+        "name": "test_brand",
+    }
+    response = functions.create_brand(admin_access_token, form_data)
+    assert response.status_code == 200
+    brand_id = response.json()['id']
+
+    form_data = {
+        "hostname": "test_device",
+        "asset_number": "PC0001",
+        "brand_id": brand_id,
+        "category_id": device_category_id,
+    }
+    response = functions.create_device(admin_access_token, form_data)
+    assert response.status_code == 200
+    device_id = response.json()['id']
+
+    response = functions.delete_device_category(admin_access_token, device_category_id)
+    assert response.status_code == 409
+
+    response = functions.delete_device(admin_access_token, device_id)
+    assert response.status_code == 200
+
     response = functions.delete_device_category(admin_access_token, device_category_id)
     assert response.status_code == 200
 
     response = functions.delete_device_category(admin_access_token, device_category_id)
+    assert response.status_code == 404
+
+    response = functions.select_device_category(admin_access_token, device_category_id)
     assert response.status_code == 404
 
 

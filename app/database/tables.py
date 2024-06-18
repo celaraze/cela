@@ -91,7 +91,7 @@ class UserHasDevice(Base):
     flag = Column(Integer, comment="标识：-1归还1使用2借用")
     message = Column(String(255), nullable=True, comment="备注")
     expired_at = Column(DateTime, nullable=True, comment="到期时间")
-    returned_at = Column(DateTime, nullable=True, comment="归还时间")
+    status = Column(Integer, comment="状态：0未结束1已结束")
     creator_id = Column(Integer, nullable=True, comment="创建者 ID")
     created_at = Column(DateTime, nullable=True, comment="创建时间")
     deleted_at = Column(DateTime, nullable=True, comment="删除时间")

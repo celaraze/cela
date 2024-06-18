@@ -64,13 +64,13 @@ class UserHasRoleCreateForm(BaseSchema):
     created_at: datetime = common.now()
 
 
-class UserHasDeviceCreateForm(BaseSchema):
+class UserHasDeviceCreateOrUpdateForm(BaseSchema):
     user_id: int
     device_id: int
-    flag: int in [-1, 1, 2]
+    flag: int = 0
     message: Union[str, None] = None
     expired_at: Union[datetime, None] = None
-    returned_at: Union[datetime, None] = None
+    status: int = 0
     creator_id: int = 0
     created_at: datetime = common.now()
 
@@ -145,6 +145,7 @@ class UserHasDevice(BaseSchema):
     flag: int
     message: Union[str, None]
     expired_at: Union[datetime, None]
+    status: int
     creator_id: int
     created_at: Union[datetime, None]
     deleted_at: Union[datetime, None]

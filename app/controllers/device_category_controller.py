@@ -28,19 +28,6 @@ async def get_device_categories(
     return device_categories
 
 
-# Get all trashed device categories.
-# Reserved for admin.
-@router.get("/trashed")
-async def get_device_categories_trashed(
-        db: databaseSession,
-        skip: int = 0,
-        limit: int = 100,
-        current_user: schemas.User = Security(get_current_user, scopes=["device_category:list", "trashed:list"]),
-):
-    device_categories = crud.select_all_with_trashed(db, tables.DeviceCategory, skip=skip, limit=limit)
-    return device_categories
-
-
 # Get device category by id.
 @router.get("/{device_category_id}")
 async def get_device_category(
@@ -57,23 +44,6 @@ async def get_device_category(
     return device_category
 
 
-# Get trashed device category by id.
-# Reserved for admin.
-@router.get("/{device_category_id}/trashed")
-async def get_device_category_trashed(
-        db: databaseSession,
-        device_category_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["device_category:info", "trashed:info"]),
-):
-    device_category = crud.select_id(db, tables.DeviceCategory, device_category_id, with_trashed=True)
-    if not device_category:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Device Category not exists",
-        )
-    return device_category
-
-
 # Create device category.
 @router.post("/")
 async def create_device_category(
@@ -81,12 +51,6 @@ async def create_device_category(
         form_data: schemas.DeviceCategoryCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["device_category:create"]),
 ):
-    db_device_category = crud.select_name(db, tables.DeviceCategory, form_data.name)
-    if db_device_category:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Device Category already exists",
-        )
     form_data.creator_id = current_user.id
     db_device_category = crud.create(db, tables.DeviceCategory, form_data)
     return db_device_category
@@ -130,22 +94,4 @@ async def delete_device_category(
             detail="Device Category has devices, please update them first.",
         )
     db_device_category = crud.delete(db, tables.DeviceCategory, device_category_id)
-    return db_device_category
-
-
-# Restore device category.
-# Reserved for admin.
-@router.put("/{device_category_id}/restore")
-async def restore_device_category(
-        db: databaseSession,
-        device_category_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["device_category:update", "trashed:restore"]),
-):
-    db_device_category = crud.select_id(db, tables.DeviceCategory, device_category_id)
-    if not db_device_category:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Device Category not exists",
-        )
-    db_device_category = crud.restore(db, tables.DeviceCategory, device_category_id)
     return db_device_category

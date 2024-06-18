@@ -63,13 +63,31 @@ def test_select():
 def test_update():
     global access_token
 
-    response = functions.update_me(access_token, "name", "test_admin2")
+    update_form = [
+        {
+            "key": "name",
+            "value": "test_admin2",
+        }
+    ]
+    response = functions.update_me(access_token, update_form)
     assert response.status_code == 200
 
-    response = functions.update_me(access_token, "email", "test_admin2@test.com")
+    update_form = [
+        {
+            "key": "email",
+            "value": "test_admin2@test.com",
+        }
+    ]
+    response = functions.update_me(access_token, update_form)
     assert response.status_code == 200
 
-    response = functions.update_me(access_token, "username", "test_admin2")
+    update_form = [
+        {
+            "key": "username",
+            "value": "test_admin2",
+        }
+    ]
+    response = functions.update_me(access_token, update_form)
     assert response.status_code == 200
 
     response = functions.login("test_admin2", "test_admin")

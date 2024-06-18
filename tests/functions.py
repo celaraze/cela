@@ -38,6 +38,8 @@ def create_admin(user: schemas.UserCreateForm):
     db.close()
 
 
+# Auth
+
 def login(username: str, password: str) -> Response:
     return client.post(
         "/auth/login",
@@ -62,11 +64,11 @@ def select_me(access_token: str) -> Response:
     )
 
 
-def update_me(access_token: str, key: str, value: str) -> Response:
+def update_me(access_token: str, update_form: list[dict]) -> Response:
     return client.put(
         "/auth/me",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"key": key, "value": value}
+        json=update_form
     )
 
 
@@ -77,6 +79,8 @@ def update_me_change_password(access_token: str, old_password: str, new_password
         json={"old_password": old_password, "new_password": new_password}
     )
 
+
+# User
 
 def select_user(access_token: str, user_id: id) -> Response:
     return client.get(
@@ -92,14 +96,6 @@ def select_users(access_token: str) -> Response:
     )
 
 
-def select_users_advance_query(access_token: str, params: list[dict] = None) -> Response:
-    return client.post(
-        f"/users/advance_query",
-        headers={"Authorization": f"Bearer {access_token}"},
-        json=params
-    )
-
-
 def create_user(access_token: str, form_data: dict) -> Response:
     return client.post(
         f"/users",
@@ -108,11 +104,11 @@ def create_user(access_token: str, form_data: dict) -> Response:
     )
 
 
-def update_user(access_token: str, user_id: id, key: str, value: str) -> Response:
+def update_user(access_token: str, user_id: id, update_form: list[dict]) -> Response:
     return client.put(
         f"/users/{user_id}",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"key": key, "value": value}
+        json=update_form
     )
 
 
@@ -122,6 +118,8 @@ def delete_user(access_token: str, user_id: id) -> Response:
         headers={"Authorization": f"Bearer {access_token}"},
     )
 
+
+# Role
 
 def select_role(access_token: str, role_id: id) -> Response:
     return client.get(
@@ -137,14 +135,6 @@ def select_roles(access_token: str) -> Response:
     )
 
 
-def select_roles_advance_query(access_token: str, params: list[dict] = None) -> Response:
-    return client.post(
-        f"/roles/advance_query",
-        headers={"Authorization": f"Bearer {access_token}"},
-        json=params
-    )
-
-
 def create_role(access_token: str, form_data: dict) -> Response:
     return client.post(
         f"/roles",
@@ -153,7 +143,7 @@ def create_role(access_token: str, form_data: dict) -> Response:
     )
 
 
-def update_role(access_token: str, role_id: id, form_data: dict) -> Response:
+def update_role(access_token: str, role_id: id, form_data: list[dict]) -> Response:
     return client.put(
         f"/roles/{role_id}",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -168,39 +158,19 @@ def delete_role(access_token: str, role_id: id) -> Response:
     )
 
 
-def select_user_has_roles(access_token: str) -> Response:
-    return client.get(
-        f"/user_has_roles",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
+# UserHasRole
 
-
-def select_user_has_role(access_token: str, user_has_role_id: id) -> Response:
-    return client.get(
-        f"/user_has_roles/{user_has_role_id}",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-
-
-def select_user_has_roles_advance_query(access_token: str, params: list[dict] = None) -> Response:
+def create_user_has_role(access_token: str, user_id: id, form_data: dict) -> Response:
     return client.post(
-        f"/user_has_roles/advance_query",
-        headers={"Authorization": f"Bearer {access_token}"},
-        json=params
-    )
-
-
-def create_user_has_role(access_token: str, form_data: dict) -> Response:
-    return client.post(
-        f"/user_has_roles",
+        f"/users/{user_id}/roles",
         json=form_data,
         headers={"Authorization": f"Bearer {access_token}"},
     )
 
 
-def delete_user_has_role(access_token: str, user_has_role_id: id) -> Response:
+def delete_user_has_role(access_token: str, user_id: id, role_id: id) -> Response:
     return client.delete(
-        f"/user_has_roles/{user_has_role_id}",
+        f"/users/{user_id}/roles/{role_id}",
         headers={"Authorization": f"Bearer {access_token}"},
     )
 
@@ -211,6 +181,8 @@ def delete_user_has_role_by_user_id_and_role_id(access_token: str, user_id: id, 
         headers={"Authorization": f"Bearer {access_token}"},
     )
 
+
+# Brand
 
 def create_brand(access_token: str, form_data: dict) -> Response:
     return client.post(
@@ -227,13 +199,6 @@ def select_brands(access_token: str) -> Response:
     )
 
 
-def select_brands_trashed(access_token: str) -> Response:
-    return client.get(
-        f"/brands/trashed",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-
-
 def select_brand(access_token: str, brand_id: id) -> Response:
     return client.get(
         f"/brands/{brand_id}",
@@ -241,14 +206,7 @@ def select_brand(access_token: str, brand_id: id) -> Response:
     )
 
 
-def select_brand_trashed(access_token: str, brand_id: id) -> Response:
-    return client.get(
-        f"/brands/{brand_id}/trashed",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-
-
-def update_brand(access_token: str, brand_id: id, form_data: dict) -> Response:
+def update_brand(access_token: str, brand_id: id, form_data: list[dict]) -> Response:
     return client.put(
         f"/brands/{brand_id}",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -263,19 +221,7 @@ def delete_brand(access_token: str, brand_id: id) -> Response:
     )
 
 
-def force_delete_brand(access_token: str, brand_id: id) -> Response:
-    return client.delete(
-        f"/brands/{brand_id}/force",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-
-
-def restore_brand(access_token: str, brand_id: id) -> Response:
-    return client.put(
-        f"/brands/{brand_id}/restore",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-
+# DeviceCategory
 
 def create_device_category(access_token: str, form_data: dict) -> Response:
     return client.post(
@@ -299,15 +245,7 @@ def select_device_category(access_token: str, device_category_id: id) -> Respons
     )
 
 
-def select_device_categories_advance_query(access_token: str, params: list[dict] = None) -> Response:
-    return client.post(
-        f"/device_categories/advance_query",
-        headers={"Authorization": f"Bearer {access_token}"},
-        json=params
-    )
-
-
-def update_device_category(access_token: str, device_category_id: id, form_data: dict) -> Response:
+def update_device_category(access_token: str, device_category_id: id, form_data: list[dict]) -> Response:
     return client.put(
         f"/device_categories/{device_category_id}",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -321,6 +259,8 @@ def delete_device_category(access_token: str, device_category_id: id) -> Respons
         headers={"Authorization": f"Bearer {access_token}"},
     )
 
+
+# Device
 
 def create_device(access_token: str, form_data: dict) -> Response:
     return client.post(
@@ -347,15 +287,7 @@ def select_device(access_token: str, device_id: id) -> Response:
     )
 
 
-def select_devices_advance_query(access_token: str, params: list[dict] = None) -> Response:
-    return client.post(
-        f"/devices/advance_query",
-        headers={"Authorization": f"Bearer {access_token}"},
-        json=params
-    )
-
-
-def update_device(access_token: str, device_id: id, form_data: dict) -> Response:
+def update_device(access_token: str, device_id: id, form_data: list[dict]) -> Response:
     return client.put(
         f"/devices/{device_id}",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -370,60 +302,19 @@ def delete_device(access_token: str, device_id: id) -> Response:
     )
 
 
-def create_user_has_device(access_token: str, form_data: dict) -> Response:
+# UserHasDevice
+
+def user_has_device_out(access_token: str, user_id: id, form_data: dict) -> Response:
     return client.post(
-        f"/user_has_devices",
+        f"/users/{user_id}/devices/out",
         headers={"Authorization": f"Bearer {access_token}"},
         json=form_data
     )
 
 
-def select_user_has_devices(access_token: str) -> Response:
-    return client.get(
-        f"/user_has_devices",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-
-
-def select_user_has_device(access_token: str, user_has_device_id: id) -> Response:
-    return client.get(
-        f"/user_has_devices/{user_has_device_id}",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-
-
-def select_user_has_device_by_user_id_and_device_id(access_token: str, user_id: id, device_id: id) -> Response:
-    return client.get(
-        f"/user_has_devices/{user_id}/{device_id}",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-
-
-def select_user_has_devices_advance_query(access_token: str, params: list[dict] = None) -> Response:
+def user_has_device_in(access_token: str, user_id: id, form_data: dict) -> Response:
     return client.post(
-        f"/user_has_devices/advance_query",
+        f"/users/{user_id}/devices/in",
         headers={"Authorization": f"Bearer {access_token}"},
-        json=params
-    )
-
-
-def update_user_has_device(access_token: str, user_has_device_id: id, form_data: dict) -> Response:
-    return client.put(
-        f"/user_has_devices/{user_has_device_id}",
-        headers={"Authorization": f"Bearer {access_token}"},
-        json=form_data
-    )
-
-
-def delete_user_has_device(access_token: str, user_has_device_id: id) -> Response:
-    return client.delete(
-        f"/user_has_devices/{user_has_device_id}",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-
-
-def delete_user_has_device_by_user_id_and_device_id(access_token: str, user_id: id, device_id: id) -> Response:
-    return client.delete(
-        f"/user_has_devices?user_id={user_id}&device_id={device_id}",
-        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data,
     )
