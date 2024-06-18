@@ -42,7 +42,7 @@ async def me(
 @router.put("/me")
 async def update_me(
         db: databaseSession,
-        form_data: schemas.UpdateForm,
+        form_data: list[schemas.UpdateForm],
         current_user: schemas.User = Security(get_current_user, scopes=["auth:me"]),
 ):
     current_user = crud.update(db, tables.User, current_user.id, form_data)
@@ -62,7 +62,9 @@ async def change_password(
             detail="Incorrect password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    update_form = schemas.UpdateForm(key="hashed_password", value=crypt.hash_password(form_data.new_password))
+    update_form = [
+        schemas.UpdateForm(key="hashed_password", value=crypt.hash_password(form_data.new_password))
+    ]
     current_user = crud.update(db, tables.User, current_user.id, update_form)
     return current_user
 

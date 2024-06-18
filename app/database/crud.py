@@ -176,12 +176,13 @@ def update(
         db,
         table,
         primary_id,
-        form_data: schemas.UpdateForm,
+        form_data: list[schemas.UpdateForm],
         with_trashed: bool = False,
 ):
     db_record = select_id(db, table, primary_id, with_trashed=with_trashed)
     if db_record:
-        setattr(db_record, form_data.key, form_data.value)
+        for update_form in form_data:
+            setattr(db_record, update_form.key, update_form.value)
     db.commit()
     db.refresh(db_record)
     return db_record
@@ -241,3 +242,30 @@ def force_delete_conditions(
     for db_record in db_records:
         db.delete(db_record)
     return db_records
+
+
+def copy(
+        db,
+        table,
+        db_record,
+):
+    db_record_dict = db_record.__dict__
+    db_record_dict.pop(PRIMARY_ID)
+    db_record_dict.pop(SOFT_DELETE)
+    new_db_record = table(**db_record_dict)
+    db.add(new_db_record)
+    db.commit()
+    db.refresh(new_db_record)
+    return new_db_record
+
+
+def copy_and_soft_delete_old(
+        db,
+        table,
+        db_record,
+):
+    db_record = copy(db, table, db_record)
+    if db_record:
+        delete(db, table, getattr(db_record, PRIMARY_ID))
+        return True
+    return False

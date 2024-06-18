@@ -5,11 +5,9 @@ from .controllers import (
     auth_controller,
     role_controller,
     user_controller,
-    user_has_role_controller,
     brand_controller,
     device_category_controller,
     device_controller,
-    user_has_device_controller,
 )
 
 tables.Base.metadata.create_all(bind=engine)
@@ -45,8 +43,6 @@ app = FastAPI(
 app.include_router(auth_controller.router)
 app.include_router(role_controller.router)
 app.include_router(user_controller.router)
-app.include_router(user_has_role_controller.router)
 app.include_router(brand_controller.router)
 app.include_router(device_category_controller.router)
 app.include_router(device_controller.router)
-app.include_router(user_has_device_controller.router)

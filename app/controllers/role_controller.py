@@ -14,6 +14,10 @@ router = APIRouter(
 )
 
 
+# APIs for role.
+
+
+# Get all roles.
 @router.get("/")
 async def get_roles(
         db: databaseSession,
@@ -25,17 +29,20 @@ async def get_roles(
     return roles
 
 
+# Get all trashed roles.
+# Reserved for admin.
 @router.get("/trashed")
 async def get_roles_trashed(
         db: databaseSession,
         skip: int = 0,
         limit: int = 100,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:list"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["role:list", "trashed:list"]),
 ):
     roles = crud.select_all_with_trashed(db, tables.Role, skip=skip, limit=limit)
     return roles
 
 
+# Get role by id.
 @router.get("/{role_id}")
 async def get_role(
         db: databaseSession,
@@ -51,16 +58,19 @@ async def get_role(
     return role
 
 
+# Get trashed role by id.
+# Reserved for admin.
 @router.get("/{role_id}/trashed")
 async def get_role_trashed(
         db: databaseSession,
         role_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:info"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["role:info", "trashed:info"]),
 ):
     role = crud.select_id(db, tables.Role, role_id, with_trashed=True)
     return role
 
 
+# Create role.
 @router.post("/")
 async def create_role(
         db: databaseSession,
@@ -78,11 +88,12 @@ async def create_role(
     return db_role
 
 
+# Update role.
 @router.put("/{role_id}")
 async def update_role(
         db: databaseSession,
         role_id: int,
-        form_data: schemas.UpdateForm,
+        form_data: list[schemas.UpdateForm],
         current_user: schemas.User = Security(get_current_user, scopes=["role:update"]),
 ):
     db_role = crud.select_id(db, tables.Role, role_id)
@@ -95,6 +106,7 @@ async def update_role(
     return db_role
 
 
+# Delete role.
 @router.delete("/{role_id}")
 async def delete_role(
         db: databaseSession,
@@ -117,11 +129,13 @@ async def delete_role(
     return db_role
 
 
+# Restore role.
+# Reserved for admin.
 @router.put("/{role_id}/restore")
 async def restore_role(
         db: databaseSession,
         role_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:restore"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["role:update", "trashed:restore"]),
 ):
     db_role = crud.select_id(db, tables.Role, role_id, with_trashed=True)
     if not db_role:
@@ -130,26 +144,4 @@ async def restore_role(
             detail="Role not exists",
         )
     db_role = crud.restore(db, tables.Role, role_id)
-    return db_role
-
-
-@router.delete("/{role_id}/force")
-async def force_delete_role(
-        db: databaseSession,
-        role_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["role:force"]),
-):
-    db_role = crud.select_id(db, tables.Role, role_id, with_trashed=True)
-    if not db_role:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Role not exists",
-        )
-    users = get_users(db, role_id)
-    if users:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Role has users, please update them first.",
-        )
-    db_role = crud.force_delete(db, tables.Role, role_id)
     return db_role

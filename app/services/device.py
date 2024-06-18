@@ -1,26 +1,17 @@
 from app.database import crud, schemas, tables
 
 
-def get_user_has_devices(db, device_id: int):
+def get_user_has_device(db, device_id: int):
     conditions = [
         schemas.QueryForm(key="device_id", operator="==", value=device_id),
     ]
-    return crud.selects(db, tables.UserHasDevice, conditions)
+    user_has_devices = crud.selects(db, tables.UserHasDevice, conditions)
+    return user_has_devices[0]
 
 
-def get_users(db, device_id: int):
-    user_has_devices = get_user_has_devices(db, device_id)
-    users = []
-    for user_has_device in user_has_devices:
-        user = crud.select_id(db, tables.User, user_has_device.user_id)
-        if user:
-            users.append(user)
-    return users
-
-
-def get_current_user(db, device_id: int):
-    users = get_users(db, device_id)
-    for user in users:
-        if user.flag in [1, 2]:
-            return user
-    return None
+def get_user(db, device_id):
+    user_id = get_user_has_device(db, device_id)
+    user = crud.select_id(db, tables.User, user_id)
+    if not user:
+        return None
+    return user

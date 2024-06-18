@@ -67,7 +67,7 @@ class UserHasRoleCreateForm(BaseSchema):
 class UserHasDeviceCreateForm(BaseSchema):
     user_id: int
     device_id: int
-    flag: int
+    flag: int in [-1, 1, 2]
     message: Union[str, None] = None
     expired_at: Union[datetime, None] = None
     returned_at: Union[datetime, None] = None

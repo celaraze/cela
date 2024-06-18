@@ -14,6 +14,10 @@ router = APIRouter(
 )
 
 
+# APIs for brand.
+
+
+# Get all brands.
 @router.get("/")
 async def get_brands(
         db: databaseSession,
@@ -25,17 +29,20 @@ async def get_brands(
     return brands
 
 
+# Get all trashed brands.
+# Reserved for admin.
 @router.get("/trashed")
 async def get_brands_trashed(
         db: databaseSession,
         skip: int = 0,
         limit: int = 100,
-        current_user: schemas.User = Security(get_current_user, scopes=["brand:list"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["brand:list", "trashed:list"]),
 ):
     brands = crud.select_all_with_trashed(db, tables.Brand, skip=skip, limit=limit)
     return brands
 
 
+# Get brand by id.
 @router.get("/{brand_id}")
 async def get_brand(
         db: databaseSession,
@@ -51,11 +58,13 @@ async def get_brand(
     return brand
 
 
+# Get trashed brand by id.
+# Reserved for admin.
 @router.get("/{brand_id}/trashed")
 async def get_brand(
         db: databaseSession,
         brand_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["brand:info"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["brand:info", "trashed:info"]),
 ):
     brand = crud.select_id(db, tables.Brand, brand_id, with_trashed=True)
     if not brand:
@@ -66,6 +75,7 @@ async def get_brand(
     return brand
 
 
+# Create brand.
 @router.post("/")
 async def create_brand(
         db: databaseSession,
@@ -83,11 +93,12 @@ async def create_brand(
     return db_brand
 
 
+# Update brand.
 @router.put("/{brand_id}")
 async def update_brand(
         db: databaseSession,
         brand_id: int,
-        form_data: schemas.UpdateForm,
+        form_data: list[schemas.UpdateForm],
         current_user: schemas.User = Security(get_current_user, scopes=["brand:update"]),
 ):
     db_brand = crud.select_id(db, tables.Brand, brand_id)
@@ -100,6 +111,7 @@ async def update_brand(
     return db_brand
 
 
+# Delete brand.
 @router.delete("/{brand_id}")
 async def delete_brand(
         db: databaseSession,
@@ -122,11 +134,13 @@ async def delete_brand(
     return db_brand
 
 
+# Restore brand.
+# Reserved for admin.
 @router.put("/{brand_id}/restore")
 async def restore_brand(
         db: databaseSession,
         brand_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["brand:restore"]),
+        current_user: schemas.User = Security(get_current_user, scopes=["brand:update", "trashed:restore"]),
 ):
     db_brand = crud.select_id(db, tables.Brand, brand_id, with_trashed=True)
     if not db_brand:
@@ -135,26 +149,4 @@ async def restore_brand(
             detail="Brand not exists",
         )
     db_brand = crud.restore(db, tables.Brand, brand_id)
-    return db_brand
-
-
-@router.delete("/{brand_id}/force")
-async def force_delete_brand(
-        db: databaseSession,
-        brand_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["brand:force-delete"]),
-):
-    db_brand = crud.select_id(db, tables.Brand, brand_id, with_trashed=True)
-    if not db_brand:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Brand not exists",
-        )
-    devices = get_devices(db, brand_id)
-    if devices:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Brand has devices, please update devices first.",
-        )
-    db_brand = crud.force_delete(db, tables.Brand, brand_id)
     return db_brand
