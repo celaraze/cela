@@ -1,8 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Security
 
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
-from ..database import schemas
-from ..models.brand import Brand
+from ..database import schemas, crud, tables
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -21,7 +20,7 @@ async def get_brands(
         limit: int = 100,
         current_user: schemas.User = Security(get_current_user, scopes=["brand:list"]),
 ):
-    brands = Brand.select_all(db, skip=skip, limit=limit)
+    brands = crud.select_all(db, tables.Brand, skip=skip, limit=limit)
     return brands
 
 
@@ -31,7 +30,7 @@ async def get_brand(
         brand_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["brand:info"]),
 ):
-    brand = Brand.select_one(db, brand_id)
+    brand = crud.select_id(db, tables.Brand, brand_id)
     if not brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -40,30 +39,20 @@ async def get_brand(
     return brand
 
 
-@router.post("/advance_query")
-async def get_brands_advance_query(
-        db: databaseSession,
-        form_data: list[schemas.QueryForm],
-        current_user: schemas.User = Security(get_current_user, scopes=["brand:list"]),
-):
-    brands = Brand.select_all_advanced(db, form_data)
-    return brands
-
-
 @router.post("/")
 async def create_brand(
         db: databaseSession,
         form_data: schemas.BrandCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["brand:create"]),
 ):
-    db_brand = Brand.select_one_by_name(db, form_data.name)
+    db_brand = crud.select_name(db, tables.Brand, form_data.name)
     if db_brand:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Brand already exists",
         )
     form_data.creator_id = current_user.id
-    db_brand = Brand.create(db, form_data)
+    db_brand = crud.create(db, tables.Brand, form_data)
     return db_brand
 
 
@@ -74,13 +63,13 @@ async def update_brand(
         form_data: schemas.UpdateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["brand:update"]),
 ):
-    db_brand = Brand.select_one(db, brand_id)
+    db_brand = crud.select_id(db, tables.Brand, brand_id)
     if not db_brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Brand not exists",
         )
-    db_brand = Brand.update(db, brand_id, form_data)
+    db_brand = crud.update(db, tables.Brand, brand_id, form_data)
     return db_brand
 
 
@@ -90,13 +79,13 @@ async def delete_brand(
         brand_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["brand:delete"]),
 ):
-    db_brand = Brand.select_one(db, brand_id)
+    db_brand = crud.select_id(db, tables.Brand, brand_id)
     if not db_brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Brand not exists",
         )
-    db_brand = Brand.delete(db, brand_id)
+    db_brand = crud.delete(db, tables.Brand, brand_id)
     return db_brand
 
 
@@ -106,13 +95,13 @@ async def restore_brand(
         brand_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["brand:restore"]),
 ):
-    db_brand = Brand.select_one_with_trashed(db, brand_id)
+    db_brand = crud.select_id(db, tables.Brand, brand_id, with_trashed=True)
     if not db_brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Brand not exists",
         )
-    db_brand = Brand.restore(db, brand_id)
+    db_brand = crud.restore(db, tables.Brand, brand_id)
     return db_brand
 
 
@@ -122,11 +111,11 @@ async def force_delete_brand(
         brand_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["brand:force-delete"]),
 ):
-    db_brand = Brand.select_one_with_trashed(db, brand_id)
+    db_brand = crud.select_id(db, tables.Brand, brand_id, with_trashed=True)
     if not db_brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Brand not exists",
         )
-    db_brand = Brand.force_delete(db, brand_id)
+    db_brand = crud.force_delete(db, tables.Brand, brand_id)
     return db_brand

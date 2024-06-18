@@ -80,17 +80,6 @@ def test_delete():
     response = functions.delete_brand(admin_access_token, brand_id)
     assert response.status_code == 404
 
-    params = [
-        {
-            "key": "deleted_at",
-            "operator": "!=",
-            "value": None,
-        }
-    ]
-    response = functions.select_brands_advance_query(admin_access_token, params)
-    assert response.status_code == 200
-    assert len(response.json()) != 0
-
 
 def test_end():
     functions.end()

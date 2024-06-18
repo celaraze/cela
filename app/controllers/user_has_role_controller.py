@@ -1,10 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Security
 
-from ..database import schemas
+from ..database import schemas, crud, tables
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
-from ..models.role import Role
-from ..models.user import User
-from ..models.user_has_role import UserHasRole
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -23,7 +20,7 @@ async def get_user_has_roles(
         skip: int = 0,
         limit: int = 100,
 ):
-    user_has_roles = UserHasRole.select_all(db, skip=skip, limit=limit)
+    user_has_roles = crud.select_all(db, tables.UserHasRole, skip=skip, limit=limit)
     if not user_has_roles:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -38,7 +35,7 @@ async def get_user_has_role(
         user_has_role_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:info"]),
 ):
-    user_has_role = UserHasRole.select_one(db, user_has_role_id)
+    user_has_role = crud.select_id(db, tables.UserHasRole, user_has_role_id)
     if not user_has_role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -47,42 +44,36 @@ async def get_user_has_role(
     return user_has_role
 
 
-@router.post("/advance_query")
-async def get_user_has_roles_advance_query(
-        db: databaseSession,
-        form_data: list[schemas.QueryForm],
-        current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:list"]),
-):
-    user_has_roles = UserHasRole.select_all_advanced(db, form_data)
-    return user_has_roles
-
-
 @router.post("/")
 async def create_user_has_role(
         db: databaseSession,
         form_data: schemas.UserHasRoleCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:create"]),
 ):
-    db_user = User.select_one(db, form_data.user_id)
+    db_user = crud.select_id(db, tables.User, form_data.user_id)
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not exists",
         )
-    db_role = Role.select_one(db, form_data.role_id)
+    db_role = crud.select_id(db, tables.Role, form_data.role_id)
     if not db_role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Role not exists",
         )
-    db_user_has_role = UserHasRole.select_one_by_user_id_and_role_id(db, form_data.user_id, form_data.role_id)
-    if db_user_has_role:
+    conditions = [
+        schemas.QueryForm(key="user_id", operator="==", value=form_data.user_id),
+        schemas.QueryForm(key="role_id", operator="==", value=form_data.role_id),
+    ]
+    db_user_has_roles = crud.selects(db, tables.UserHasRole, conditions)
+    if db_user_has_roles:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User role already exists",
         )
     form_data.creator_id = current_user.id
-    db_user_has_role = UserHasRole.create(db, form_data)
+    db_user_has_role = crud.create(db, tables.UserHasRole, form_data)
     return db_user_has_role
 
 
@@ -92,13 +83,13 @@ async def delete_user_has_role(
         user_has_role_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:delete"]),
 ):
-    db_user_has_role = UserHasRole.select_one(db, user_has_role_id)
+    db_user_has_role = crud.select_id(db, tables.UserHasRole, user_has_role_id)
     if not db_user_has_role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User role not exists",
         )
-    db_user_has_role = UserHasRole.delete(db, user_has_role_id)
+    db_user_has_role = crud.delete(db, tables.UserHasRole, user_has_role_id)
     return db_user_has_role
 
 
@@ -109,11 +100,15 @@ async def delete_user_has_role_by_user_id_and_role_id(
         role_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:delete"]),
 ):
-    db_user_has_role = UserHasRole.select_one_by_user_id_and_role_id(db, user_id, role_id)
-    if not db_user_has_role:
+    conditions = [
+        schemas.QueryForm(key="user_id", operator="==", value=user_id),
+        schemas.QueryForm(key="role_id", operator="==", value=role_id),
+    ]
+    db_user_has_roles = crud.selects(db, tables.UserHasRole, conditions)
+    if not db_user_has_roles:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User role not exists",
         )
-    db_user_has_role = UserHasRole.delete_by_user_id_and_role_id(db, user_id, role_id)
+    db_user_has_role = crud.delete(db, tables.UserHasRole, db_user_has_roles[0].id)
     return db_user_has_role

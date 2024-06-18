@@ -116,12 +116,8 @@ def test_select():
     response = functions.select_device(admin_access_token, 0)
     assert response.status_code == 404
 
-    params = {
-        "asset_number": "PC0001",
-    }
-    response = functions.select_devices(admin_access_token, params)
+    response = functions.select_devices(admin_access_token, "PC0001")
     assert response.status_code == 200
-    print(response.json())
     assert response.json()['hostname'] == "test_device"
 
     response = functions.select_device(admin_access_token, device_id)

@@ -1,10 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Security
 
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
-from ..database import schemas
-from ..models.brand import Brand
-from ..models.device import Device
-from ..models.device_category import DeviceCategory
+from ..database import schemas, crud, tables
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -24,9 +21,9 @@ async def get_devices(
         asset_number: str = None,
         current_user: schemas.User = Security(get_current_user, scopes=["device:list"]),
 ):
-    devices = Device.select_all(db, skip=skip, limit=limit)
+    devices = crud.select_all(db, tables.Device, skip=skip, limit=limit)
     if asset_number:
-        devices = Device.select_one_by_asset_number(db, asset_number)
+        devices = crud.select_asset_number(db, tables.Device, asset_number)
     return devices
 
 
@@ -36,7 +33,7 @@ async def get_device(
         device_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["device:info"]),
 ):
-    device = Device.select_one(db, device_id)
+    device = crud.select_id(db, tables.Device, device_id)
     if not device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -45,42 +42,32 @@ async def get_device(
     return device
 
 
-@router.post("/advance_query")
-async def get_devices_advance_query(
-        db: databaseSession,
-        form_data: list[schemas.QueryForm],
-        current_user: schemas.User = Security(get_current_user, scopes=["device:list"]),
-):
-    devices = Device.select_all_advanced(db, form_data)
-    return devices
-
-
 @router.post("/")
 async def create_device(
         db: databaseSession,
         form_data: schemas.DeviceCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["device:create"]),
 ):
-    db_device = Device.select_one_by_asset_number(db, form_data.asset_number)
+    db_device = crud.select_asset_number(db, tables.Device, form_data.asset_number)
     if db_device:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Device asset number already exists",
         )
-    db_brand = Brand.select_one(db, form_data.brand_id)
+    db_brand = crud.select_id(db, tables.Brand, form_data.brand_id)
     if not db_brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Brand not exists",
         )
-    db_device_category = DeviceCategory.select_one(db, form_data.category_id)
+    db_device_category = crud.select_id(db, tables.DeviceCategory, form_data.category_id)
     if not db_device_category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device category not exists",
         )
     form_data.creator_id = current_user.id
-    db_device = Device.create(db, form_data)
+    db_device = crud.create(db, tables.Device, form_data)
     return db_device
 
 
@@ -91,7 +78,7 @@ async def update_device(
         form_data: schemas.UpdateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["device:update"]),
 ):
-    db_device = Device.select_one(db, device_id)
+    db_device = crud.select_id(db, tables.Device, device_id)
     if not db_device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -102,7 +89,7 @@ async def update_device(
             status_code=status.HTTP_423_LOCKED,
             detail="Asset number cannot be updated",
         )
-    db_device = Device.update(db, device_id, form_data)
+    db_device = crud.update(db, tables.Device, device_id, form_data)
     return db_device
 
 
@@ -112,11 +99,11 @@ async def delete_device(
         device_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["device:delete"]),
 ):
-    db_device = Device.select_one(db, device_id)
+    db_device = crud.select_id(db, tables.Device, device_id)
     if not db_device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device not exists",
         )
-    db_brand = Device.delete(db, device_id)
+    db_brand = crud.delete(db, tables.Device, device_id)
     return db_brand

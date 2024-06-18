@@ -30,18 +30,18 @@ def authenticate(
         username: str,
         password: str,
 ) -> Union[schemas.User, bool]:
-    users = crud.select_by_username(db, tables.User, username)
-    if not users:
+    user = crud.select_username(db, tables.User, username)
+    if not user:
         return False
-    if not crypt.verify_hashed_password(password, users[0].hashed_password):
+    if not crypt.verify_hashed_password(password, user.hashed_password):
         return False
-    return users[0]
+    return user
 
 
 def create_super_admin(db, form_data: schemas.UserCreateForm):
     try:
-        roles = crud.select_by_name(db, tables.Role, "superuser")
-        if not roles:
+        role = crud.select_name(db, tables.Role, "superuser")
+        if not role:
             print("Creating a superuser role.")
             role_create = schemas.RoleCreateForm(
                 name="superuser",
@@ -51,20 +51,20 @@ def create_super_admin(db, form_data: schemas.UserCreateForm):
             print("Superuser role created successfully.")
         else:
             print("Superuser role already exists.")
-        user = crud.create(db, tables.User, form_data)
+        user = crud.create_user(db, tables.User, form_data)
         if not user:
             print("Error creating super user.")
             return
 
-        user_has_role = schemas.UserHasRoleCreateForm(
+        form_data = schemas.UserHasRoleCreateForm(
             user_id=user.id,
             role_id=role.id,
         )
-        user_has_role = UserHasRole.create(db, user_has_role)
+        user_has_role = crud.create(db, tables.UserHasRole, form_data)
         if user_has_role:
             print("User has superuser role.")
 
         print("Super admin created successfully.")
     except Exception as e:
         print("Error creating super admin.")
-        print(e)
+        raise e

@@ -6,9 +6,8 @@ from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from sqlalchemy.orm import Session
 
 from .config.database import engine
-from .database import schemas
+from .database import schemas, crud, tables
 
-from .models.user import User
 from .services.auth import decode_access_token
 
 
@@ -93,7 +92,7 @@ async def get_current_user(
         token_data = schemas.AuthTokenData(user_id=user_id, scopes=token_scopes)
     except Exception:
         raise credentials_exception
-    user = User.select_one(db, token_data.user_id)
+    user = crud.select_id(db, tables.User, token_data.user_id)
 
     if user is None:
         raise credentials_exception

@@ -1,8 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Security
 
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
-from ..database import schemas
-from ..models.device_category import DeviceCategory
+from ..database import schemas, crud, tables
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -21,7 +20,7 @@ async def get_device_categories(
         limit: int = 100,
         current_user: schemas.User = Security(get_current_user, scopes=["device_category:list"]),
 ):
-    device_categories = DeviceCategory.select_all(db, skip=skip, limit=limit)
+    device_categories = crud.select_all(db, tables.DeviceCategory, skip=skip, limit=limit)
     return device_categories
 
 
@@ -31,7 +30,7 @@ async def get_device_category(
         device_category_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["device_category:info"]),
 ):
-    device_category = DeviceCategory.select_one(db, device_category_id)
+    device_category = crud.select_id(db, tables.DeviceCategory, device_category_id)
     if not device_category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -40,30 +39,20 @@ async def get_device_category(
     return device_category
 
 
-@router.post("/advance_query")
-async def get_device_categories_advance_query(
-        db: databaseSession,
-        form_data: list[schemas.QueryForm],
-        current_user: schemas.User = Security(get_current_user, scopes=["device_category:list"]),
-):
-    device_categories = DeviceCategory.select_all_advanced(db, form_data)
-    return device_categories
-
-
 @router.post("/")
 async def create_device_category(
         db: databaseSession,
         form_data: schemas.DeviceCategoryCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["device_category:create"]),
 ):
-    db_device_category = DeviceCategory.select_one_by_name(db, form_data.name)
+    db_device_category = crud.select_name(db, tables.DeviceCategory, form_data.name)
     if db_device_category:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Device Category already exists",
         )
     form_data.creator_id = current_user.id
-    db_device_category = DeviceCategory.create(db, form_data)
+    db_device_category = crud.create(db, tables.DeviceCategory, form_data)
     return db_device_category
 
 
@@ -74,13 +63,13 @@ async def update_device_category(
         form_data: schemas.UpdateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["device_category:update"]),
 ):
-    db_device_category = DeviceCategory.select_one(db, device_category_id)
+    db_device_category = crud.select_id(db, tables.DeviceCategory, device_category_id)
     if not db_device_category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device Category not exists",
         )
-    db_device_category = DeviceCategory.update(db, device_category_id, form_data)
+    db_device_category = crud.update(db, tables.DeviceCategory, device_category_id, form_data)
     return db_device_category
 
 
@@ -90,11 +79,11 @@ async def delete_device_category(
         device_category_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["device_category:delete"]),
 ):
-    db_device_category = DeviceCategory.select_one(db, device_category_id)
+    db_device_category = crud.select_id(db, tables.DeviceCategory, device_category_id)
     if not db_device_category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device Category not exists",
         )
-    db_device_category = DeviceCategory.delete(db, device_category_id)
+    db_device_category = crud.delete(db, tables.DeviceCategory, device_category_id)
     return db_device_category

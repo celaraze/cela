@@ -1,8 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Security
 
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
-from ..database import schemas
-from ..models.user import User
+from ..database import schemas, crud, tables
 from ..utils import crypt
 
 oauth2_scheme = get_oauth_scheme()
@@ -22,7 +21,7 @@ async def get_users(
         limit: int = 100,
         current_user: schemas.User = Security(get_current_user, scopes=["user:list"]),
 ):
-    users = User.select_all(db, skip=skip, limit=limit)
+    users = crud.select_all(db, tables.User, skip=skip, limit=limit)
     return users
 
 
@@ -33,7 +32,7 @@ async def get_user(
         include_deleted: bool = False,
         current_user: schemas.User = Security(get_current_user, scopes=["user:info"]),
 ):
-    user = User.select_one(db, user_id)
+    user = crud.select_id(db, tables.User, user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -48,36 +47,26 @@ async def get_user(
     return user
 
 
-@router.post("/advance_query")
-async def get_users_advance_query(
-        db: databaseSession,
-        form_data: list[schemas.QueryForm],
-        current_user: schemas.User = Security(get_current_user, scopes=["user:list"]),
-):
-    users = User.select_all_advanced(db, form_data)
-    return users
-
-
 @router.post("/", response_model=schemas.User)
 async def create_user(
         db: databaseSession,
         form_data: schemas.UserCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["user:create"]),
 ):
-    db_user = User.select_one_by_email(db, form_data.email)
+    db_user = crud.select_email(db, tables.User, form_data.email)
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Email already exists",
         )
-    db_user = User.select_one_by_username(db, form_data.username)
+    db_user = crud.select_username(db, tables.User, form_data.username)
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Username already exists",
         )
     form_data.creator_id = current_user.id
-    db_user = User.create(db, form_data)
+    db_user = crud.create_user(db, tables.User, form_data)
     return db_user
 
 
@@ -88,7 +77,7 @@ async def update_user(
         form_data: schemas.UpdateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["user:update"]),
 ):
-    db_user = User.select_one(db, user_id)
+    db_user = crud.select_id(db, tables.User, user_id)
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -102,7 +91,7 @@ async def update_user(
     if form_data.key == "password":
         form_data.key = "hashed_password"
         form_data.value = crypt.hash_password(form_data.value)
-    db_user = User.update(db, db_user.id, form_data)
+    db_user = crud.update(db, tables.User, db_user.id, form_data)
     return db_user
 
 
@@ -112,11 +101,11 @@ async def delete_user(
         user_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["user:delete"]),
 ):
-    db_user = User.select_one(db, user_id)
+    db_user = crud.select_id(db, tables.User, user_id)
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not exists",
         )
-    db_user = User.delete(db, user_id)
+    db_user = crud.delete(db, tables.User, user_id)
     return db_user

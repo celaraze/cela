@@ -76,6 +76,7 @@ def test_delete():
 
     response = functions.delete_device_category(admin_access_token, device_category_id)
     assert response.status_code == 200
+
     response = functions.delete_device_category(admin_access_token, device_category_id)
     assert response.status_code == 404
 

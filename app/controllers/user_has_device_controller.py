@@ -1,10 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Security
 
-from ..database import schemas
+from ..database import schemas, crud, tables
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
-from ..models.device import Device
-from ..models.user import User
-from ..models.user_has_device import UserHasDevice
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -23,7 +20,7 @@ async def get_user_has_devices(
         skip: int = 0,
         limit: int = 100,
 ):
-    user_has_devices = UserHasDevice.select_all(db, skip=skip, limit=limit)
+    user_has_devices = crud.select_all(db, tables.UserHasDevice, skip=skip, limit=limit)
     if not user_has_devices:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -38,7 +35,7 @@ async def get_user_has_device(
         user_has_device_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["user_has_device:info"]),
 ):
-    user_has_device = UserHasDevice.select_one(db, user_has_device_id)
+    user_has_device = crud.select_id(db, tables.UserHasDevice, user_has_device_id)
     if not user_has_device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -47,42 +44,36 @@ async def get_user_has_device(
     return user_has_device
 
 
-@router.post("/advance_query")
-async def get_user_has_devices_advance_query(
-        db: databaseSession,
-        form_data: list[schemas.QueryForm],
-        current_user: schemas.User = Security(get_current_user, scopes=["user_has_device:list"]),
-):
-    user_has_devices = UserHasDevice.select_all_advanced(db, form_data)
-    return user_has_devices
-
-
 @router.post("/")
 async def create_user_has_device(
         db: databaseSession,
         form_data: schemas.UserHasDeviceCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["user_has_device:create"]),
 ):
-    db_user = User.select_one(db, form_data.user_id)
+    db_user = crud.select_id(db, tables.User, form_data.user_id)
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not exists",
         )
-    db_device = Device.select_one(db, form_data.device_id)
+    db_device = crud.select_id(db, tables.Device, form_data.device_id)
     if not db_device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device not exists",
         )
-    db_user_has_device = UserHasDevice.select_one_by_user_id_and_device_id(db, form_data.user_id, form_data.device_id)
-    if db_user_has_device:
+    conditions = [
+        schemas.QueryForm(key="user_id", operator="==", value=form_data.user_id),
+        schemas.QueryForm(key="device_id", operator="==", value=form_data.device_id),
+    ]
+    db_user_has_devices = crud.selects(db, tables.UserHasDevice, conditions)
+    if db_user_has_devices:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User device already exists",
         )
     form_data.creator_id = current_user.id
-    db_user_has_device = UserHasDevice.create(db, form_data)
+    db_user_has_device = crud.create(db, tables.UserHasDevice, form_data)
     return db_user_has_device
 
 
@@ -103,13 +94,13 @@ async def delete_user_has_device(
         user_has_device_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["user_has_device:delete"]),
 ):
-    db_user_has_device = UserHasDevice.select_one(db, user_has_device_id)
+    db_user_has_device = crud.select_id(db, tables.UserHasDevice, user_has_device_id)
     if not db_user_has_device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User device not exists",
         )
-    db_user_has_device = UserHasDevice.delete(db, user_has_device_id)
+    db_user_has_device = crud.delete(db, tables.UserHasDevice, user_has_device_id)
     return db_user_has_device
 
 
@@ -120,11 +111,15 @@ async def delete_user_has_role_by_user_id_and_role_id(
         device_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["user_has_device:delete"]),
 ):
-    db_user_has_device = UserHasDevice.select_one_by_user_id_and_device_id(db, user_id, device_id)
-    if not db_user_has_device:
+    conditions = [
+        schemas.QueryForm(key="user_id", operator="==", value=user_id),
+        schemas.QueryForm(key="device_id", operator="==", value=device_id),
+    ]
+    db_user_has_devices = crud.selects(db, tables.UserHasDevice, conditions)
+    if not db_user_has_devices:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User device not exists",
         )
-    db_user_has_device = UserHasDevice.delete_by_user_id_and_device_id(db, user_id, device_id)
+    db_user_has_device = crud.delete(db, tables.UserHasDevice, db_user_has_devices[0].id)
     return db_user_has_device

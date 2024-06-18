@@ -1,8 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Security
 
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
-from ..database import schemas
-from ..models.role import Role
+from ..database import schemas, crud, tables
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -21,7 +20,7 @@ async def get_roles(
         limit: int = 100,
         current_user: schemas.User = Security(get_current_user, scopes=["role:list"]),
 ):
-    roles = Role.select_all(db, skip=skip, limit=limit)
+    roles = crud.select_all(db, tables.Role, skip=skip, limit=limit)
     return roles
 
 
@@ -31,7 +30,7 @@ async def get_role(
         role_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["role:info"]),
 ):
-    role = Role.select_one(db, role_id)
+    role = crud.select_id(db, tables.Role, role_id)
     if not role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -40,30 +39,20 @@ async def get_role(
     return role
 
 
-@router.post("/advance_query")
-async def get_roles_advance_query(
-        db: databaseSession,
-        form_data: list[schemas.QueryForm],
-        current_user: schemas.User = Security(get_current_user, scopes=["role:list"]),
-):
-    roles = Role.select_all_advanced(db, form_data)
-    return roles
-
-
 @router.post("/")
 async def create_role(
         db: databaseSession,
         form_data: schemas.RoleCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["role:create"]),
 ):
-    db_role = Role.select_one_by_name(db, form_data.name)
+    db_role = crud.select_name(db, tables.Role, form_data.name)
     if db_role:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Role already exists",
         )
     form_data.creator_id = current_user.id
-    db_role = Role.create(db, form_data)
+    db_role = crud.create(db, tables.Role, form_data)
     return db_role
 
 
@@ -74,13 +63,13 @@ async def update_role(
         form_data: schemas.UpdateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["role:update"]),
 ):
-    db_role = Role.select_one(db, role_id)
+    db_role = crud.select_id(db, tables.Role, role_id)
     if not db_role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Role not exists",
         )
-    db_role = Role.update(db, db_role.id, form_data)
+    db_role = crud.update(db, tables.Role, db_role.id, form_data)
     return db_role
 
 
@@ -90,11 +79,11 @@ async def delete_role(
         role_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["role:delete"]),
 ):
-    db_role = Role.select_one(db, role_id)
+    db_role = crud.select_id(db, tables.Role, role_id)
     if not db_role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Role not exists",
         )
-    db_role = Role.delete(db, role_id)
+    db_role = crud.delete(db, tables.Role, role_id)
     return db_role
