@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Security
 
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
 from ..database import schemas, crud, tables
+from ..services.brand import get_devices
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -24,6 +25,17 @@ async def get_brands(
     return brands
 
 
+@router.get("/trashed")
+async def get_brands_trashed(
+        db: databaseSession,
+        skip: int = 0,
+        limit: int = 100,
+        current_user: schemas.User = Security(get_current_user, scopes=["brand:list"]),
+):
+    brands = crud.select_all_with_trashed(db, tables.Brand, skip=skip, limit=limit)
+    return brands
+
+
 @router.get("/{brand_id}")
 async def get_brand(
         db: databaseSession,
@@ -31,6 +43,21 @@ async def get_brand(
         current_user: schemas.User = Security(get_current_user, scopes=["brand:info"]),
 ):
     brand = crud.select_id(db, tables.Brand, brand_id)
+    if not brand:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Brand not exists",
+        )
+    return brand
+
+
+@router.get("/{brand_id}/trashed")
+async def get_brand(
+        db: databaseSession,
+        brand_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["brand:info"]),
+):
+    brand = crud.select_id(db, tables.Brand, brand_id, with_trashed=True)
     if not brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -85,6 +112,12 @@ async def delete_brand(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Brand not exists",
         )
+    devices = get_devices(db, brand_id)
+    if devices:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Brand has devices, please update devices first.",
+        )
     db_brand = crud.delete(db, tables.Brand, brand_id)
     return db_brand
 
@@ -116,6 +149,12 @@ async def force_delete_brand(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Brand not exists",
+        )
+    devices = get_devices(db, brand_id)
+    if devices:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Brand has devices, please update devices first.",
         )
     db_brand = crud.force_delete(db, tables.Brand, brand_id)
     return db_brand

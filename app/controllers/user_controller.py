@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, status, Security
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
 from ..database import schemas, crud, tables
 from ..utils import crypt
+from ..services.user import get_roles, get_devices
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -25,11 +26,21 @@ async def get_users(
     return users
 
 
+@router.get("/trashed")
+async def get_users_trashed(
+        db: databaseSession,
+        skip: int = 0,
+        limit: int = 100,
+        current_user: schemas.User = Security(get_current_user, scopes=["user:list"]),
+):
+    users = crud.select_all_with_trashed(db, tables.User, skip=skip, limit=limit)
+    return users
+
+
 @router.get("/{user_id}")
 async def get_user(
         db: databaseSession,
         user_id: int = None,
-        include_deleted: bool = False,
         current_user: schemas.User = Security(get_current_user, scopes=["user:info"]),
 ):
     user = crud.select_id(db, tables.User, user_id)
@@ -38,12 +49,23 @@ async def get_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not exists",
         )
-    if not include_deleted:
-        if user.deleted_at:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not exists",
-            )
+    user.roles = get_roles(db, user.id)
+    user.devices = get_devices(db, user.id)
+    return user
+
+
+@router.get("/{user_id}/trashed")
+async def get_user_trashed(
+        db: databaseSession,
+        user_id: int = None,
+        current_user: schemas.User = Security(get_current_user, scopes=["user:info"]),
+):
+    user = crud.select_id(db, tables.User, user_id, with_trashed=True)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not exists",
+        )
     return user
 
 
@@ -108,4 +130,36 @@ async def delete_user(
             detail="User not exists",
         )
     db_user = crud.delete(db, tables.User, user_id)
+    return db_user
+
+
+@router.put("/{user_id}/restore")
+async def restore_user(
+        db: databaseSession,
+        user_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["user:restore"]),
+):
+    db_user = crud.select_id(db, tables.User, user_id, with_trashed=True)
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not exists",
+        )
+    db_user = crud.restore(db, tables.User, user_id)
+    return db_user
+
+
+@router.delete("/{user_id}/force")
+async def force_delete_user(
+        db: databaseSession,
+        user_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["user:force-delete"]),
+):
+    db_user = crud.select_id(db, tables.User, user_id, with_trashed=True)
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not exists",
+        )
+    db_user = crud.force_delete(db, tables.User, user_id)
     return db_user

@@ -127,20 +127,26 @@ def select_asset_number(
 def select_all(
         db,
         table,
+        conditions: list[schemas.QueryForm] = None,
         skip: int = None,
         limit: int = None,
 ) -> list[Any]:
-    results = selects(db, table, [], skip=skip, limit=limit)
+    if conditions is None:
+        conditions = []
+    results = selects(db, table, conditions, skip=skip, limit=limit)
     return results
 
 
 def select_all_with_trashed(
         db,
         table,
+        conditions: list[schemas.QueryForm] = None,
         skip: int = None,
         limit: int = None,
 ) -> list[Any]:
-    results = selects(db, table, [], with_trashed=True, skip=skip, limit=limit)
+    if conditions is None:
+        conditions = []
+    results = selects(db, table, conditions, with_trashed=True, skip=skip, limit=limit)
     return results
 
 
@@ -194,6 +200,18 @@ def delete(
     return db_record
 
 
+def delete_conditions(
+        db,
+        table,
+        conditions: list[schemas.QueryForm],
+):
+    db_records = select_all(db, table, conditions)
+    for db_record in db_records:
+        setattr(db_record, SOFT_DELETE, common.now())
+    db.commit()
+    return db_records
+
+
 def restore(
         db,
         table,
@@ -211,5 +229,15 @@ def force_delete(
     db_record = select_id(db, table, primary_id, with_trashed=True)
     if db_record:
         db.delete(db_record)
-        db.refresh(db_record)
     return db_record
+
+
+def force_delete_conditions(
+        db,
+        table,
+        conditions: list[schemas.QueryForm],
+):
+    db_records = select_all_with_trashed(db, table, conditions)
+    for db_record in db_records:
+        db.delete(db_record)
+    return db_records

@@ -51,6 +51,15 @@ def test_select():
     response = functions.select_brand(admin_access_token, 0)
     assert response.status_code == 404
 
+    response = functions.delete_brand(admin_access_token, brand_id)
+    assert response.status_code == 200
+
+    response = functions.select_brand(admin_access_token, brand_id)
+    assert response.status_code == 404
+
+    response = functions.restore_brand(admin_access_token, brand_id)
+    assert response.status_code == 200
+
     response = functions.select_brand(admin_access_token, brand_id)
     assert response.status_code == 200
     assert response.json()['name'] == "test_brand"
@@ -79,6 +88,38 @@ def test_delete():
 
     response = functions.delete_brand(admin_access_token, brand_id)
     assert response.status_code == 404
+
+    response = functions.restore_brand(admin_access_token, brand_id)
+    assert response.status_code == 200
+
+    form_data = {
+        "name": "test_device_category",
+    }
+    response = functions.create_device_category(admin_access_token, form_data)
+    assert response.status_code == 200
+    device_category_id = response.json()['id']
+
+    form_data = {
+        "hostname": "test_device",
+        "asset_number": "PC0001",
+        "brand_id": brand_id,
+        "category_id": device_category_id,
+    }
+    response = functions.create_device(admin_access_token, form_data)
+    assert response.status_code == 200
+    device_id = response.json()['id']
+
+    response = functions.delete_brand(admin_access_token, brand_id)
+    assert response.status_code == 409
+
+    response = functions.force_delete_brand(admin_access_token, brand_id)
+    assert response.status_code == 409
+
+    response = functions.delete_device(admin_access_token, device_id)
+    assert response.status_code == 200
+
+    response = functions.force_delete_brand(admin_access_token, brand_id)
+    assert response.status_code == 200
 
 
 def test_end():

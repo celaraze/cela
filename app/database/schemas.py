@@ -15,7 +15,7 @@ class AuthTokenData(BaseSchema):
 # form schemas #
 class UpdateForm(BaseSchema):
     key: str
-    value: Union[str, list[str]]
+    value: Any
 
 
 class QueryForm(BaseSchema):
@@ -111,22 +111,6 @@ class Role(BaseSchema):
         from_attributes = True
 
 
-class User(BaseSchema):
-    id: int
-    username: str
-    email: str
-    name: str
-    is_active: bool = True
-    creator_id: int
-    created_at: Union[datetime, None]
-    deleted_at: Union[datetime, None]
-    roles: list[Role] = []
-    scopes: list[str] = []
-
-    class Config:
-        from_attributes = True
-
-
 class Footprint(BaseSchema):
     id: int
     url: str
@@ -204,6 +188,24 @@ class Device(BaseSchema):
     creator_id: int
     created_at: Union[datetime, None]
     deleted_at: Union[datetime, None]
+    user: Any
+
+    class Config:
+        from_attributes = True
+
+
+class User(BaseSchema):
+    id: int
+    username: str
+    email: str
+    name: str
+    is_active: bool = True
+    creator_id: int
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
+    roles: list[Role] = []
+    scopes: list[str] = []
+    devices: list[Device] = []
 
     class Config:
         from_attributes = True

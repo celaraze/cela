@@ -120,7 +120,3 @@ JetBrains provides excellent IDEs.
 <a href="https://www.jetbrains.com/?from=cela" target="_blank">
     <img src="https://www.jetbrains.com/company/brand/img/jetbrains_logo.png" width="100" alt="JetBrains" />
 </a>
-
-## License
-
-for free without paying any fees. And you are free to modify the source code.

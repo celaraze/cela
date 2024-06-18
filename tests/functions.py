@@ -207,7 +207,7 @@ def delete_user_has_role(access_token: str, user_has_role_id: id) -> Response:
 
 def delete_user_has_role_by_user_id_and_role_id(access_token: str, user_id: id, role_id: id) -> Response:
     return client.delete(
-        f"/user_has_roles?user_id={user_id}&role_id={role_id}",
+        f"/user_has_roles/{user_id}/{role_id}",
         headers={"Authorization": f"Bearer {access_token}"},
     )
 
@@ -227,6 +227,13 @@ def select_brands(access_token: str) -> Response:
     )
 
 
+def select_brands_trashed(access_token: str) -> Response:
+    return client.get(
+        f"/brands/trashed",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
 def select_brand(access_token: str, brand_id: id) -> Response:
     return client.get(
         f"/brands/{brand_id}",
@@ -234,11 +241,10 @@ def select_brand(access_token: str, brand_id: id) -> Response:
     )
 
 
-def select_brands_advance_query(access_token: str, params: list[dict] = None) -> Response:
-    return client.post(
-        f"/brands/advance_query",
+def select_brand_trashed(access_token: str, brand_id: id) -> Response:
+    return client.get(
+        f"/brands/{brand_id}/trashed",
         headers={"Authorization": f"Bearer {access_token}"},
-        json=params
     )
 
 
@@ -253,6 +259,20 @@ def update_brand(access_token: str, brand_id: id, form_data: dict) -> Response:
 def delete_brand(access_token: str, brand_id: id) -> Response:
     return client.delete(
         f"/brands/{brand_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def force_delete_brand(access_token: str, brand_id: id) -> Response:
+    return client.delete(
+        f"/brands/{brand_id}/force",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def restore_brand(access_token: str, brand_id: id) -> Response:
+    return client.put(
+        f"/brands/{brand_id}/restore",
         headers={"Authorization": f"Bearer {access_token}"},
     )
 

@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Security
 
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
 from ..database import schemas, crud, tables
+from ..services.device import get_current_user as get_device_current_user
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -27,6 +28,17 @@ async def get_devices(
     return devices
 
 
+@router.get("/trashed")
+async def get_devices_trashed(
+        db: databaseSession,
+        skip: int = 0,
+        limit: int = 100,
+        current_user: schemas.User = Security(get_current_user, scopes=["device:list"]),
+):
+    devices = crud.select_all_with_trashed(db, tables.Device, skip=skip, limit=limit)
+    return devices
+
+
 @router.get("/{device_id}")
 async def get_device(
         db: databaseSession,
@@ -34,6 +46,23 @@ async def get_device(
         current_user: schemas.User = Security(get_current_user, scopes=["device:info"]),
 ):
     device = crud.select_id(db, tables.Device, device_id)
+    if not device:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Device not exists",
+        )
+    user = get_device_current_user(db, device_id)
+    device.user = user
+    return device
+
+
+@router.get("/{device_id}/trashed")
+async def get_device_trashed(
+        db: databaseSession,
+        device_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["device:info"]),
+):
+    device = crud.select_id(db, tables.Device, device_id, with_trashed=True)
     if not device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
