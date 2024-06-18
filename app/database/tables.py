@@ -32,7 +32,7 @@ class User(Base):
 class Role(Base):
     __tablename__ = "roles"
     id = Column(Integer, primary_key=True, comment="ID")
-    name = Column(String(255), unique=True, comment="名称")
+    name = Column(String(255), comment="名称")
     scopes = Column(JSON, comment="权限")
     creator_id = Column(Integer, nullable=True, comment="创建者 ID")
     created_at = Column(DateTime, nullable=True, comment="创建时间")
@@ -52,7 +52,7 @@ class UserHasRole(Base):
 class Brand(Base):
     __tablename__ = "brands"
     id = Column(Integer, primary_key=True, comment="ID")
-    name = Column(String(255), unique=True, comment="名称")
+    name = Column(String(255), comment="名称")
     creator_id = Column(Integer, nullable=True, comment="创建者 ID")
     created_at = Column(DateTime, nullable=True, comment="创建时间")
     deleted_at = Column(DateTime, nullable=True, comment="删除时间")
@@ -61,7 +61,7 @@ class Brand(Base):
 class DeviceCategory(Base):
     __tablename__ = "device_categories"
     id = Column(Integer, primary_key=True, comment="ID")
-    name = Column(String(255), unique=True, comment="名称")
+    name = Column(String(255), comment="名称")
     creator_id = Column(Integer, nullable=True, comment="创建者 ID")
     created_at = Column(DateTime, nullable=True, comment="创建时间")
     deleted_at = Column(DateTime, nullable=True, comment="删除时间")

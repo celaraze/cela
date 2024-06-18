@@ -42,17 +42,12 @@ cela
 │   │   ├── __init__.py                       
 │   │   ├── auth_controller.py                # Authentication controller
 │   │   ├── role_controller.py                # Role controller
-│   │   ├── user_controller.py                # User controller
-│   │   └── user_has_role_controller.py       # User has role controller
+│   │   └── user_controller.py                # User controller
 │   ├── database                              # Database directory
-│   │   ├── __init__.py                       
+│   │   ├── __init__.py        
+│   │   ├── crud.py                           # CRUD operation file       
 │   │   ├── schemas.py                        # Pydantic schema file
 │   │   └── tables.py                         # SQLAlchemy table file
-│   ├── models                                # Model directory
-│   │   ├── __init__.py                       
-│   │   ├── role.py                           # Role model
-│   │   ├── user.py                           # User model
-│   │   └── user_has_role.py                  # User has role model
 │   ├── services                              # Service directory
 │   │   ├── __init__.py                       
 │   │   └── auth.py                           # Authentication service
