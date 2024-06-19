@@ -4,7 +4,7 @@ WORKDIR /service
 
 ADD . /service
 
-RUN rm /service/app/config/env.yml
+RUN if [ -f /service/app/config/env.yml ]; then rm /service/app/config/env.yml; fi
 
 RUN pip install --no-cache-dir -r requirements.txt
 
