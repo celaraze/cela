@@ -97,6 +97,11 @@ async def create_user(
             status_code=status.HTTP_409_CONFLICT,
             detail="Username already exists",
         )
+    if db_user.username == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username name 'admin' is reserved.",
+        )
     form_data.creator_id = current_user.id
     db_user = crud.create_user(db, tables.User, form_data)
     return db_user
@@ -126,6 +131,11 @@ async def update_user(
             form.key = "hashed_password"
             form.value = crypt.hash_password(form.value)
             form_data[i] = form
+        if (form.key == "username") and (form.value == "admin"):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Username name 'admin' is reserved.",
+            )
     db_user = crud.update(db, tables.User, db_user.id, form_data)
     return db_user
 
@@ -143,29 +153,16 @@ async def delete_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not exists",
         )
+    if db_user.username == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username name 'admin' is reserved.",
+        )
     # Delete user has roles and user has devices.
     conditions = [schemas.QueryForm(key="user_id", operator="==", value=user_id)]
     crud.delete_conditions(db, tables.UserHasRole, conditions)
     crud.delete_conditions(db, tables.UserHasDevice, conditions)
     db_user = crud.delete(db, tables.User, user_id)
-    return db_user
-
-
-# Restore user.
-# Reserved for admin.
-@router.put("/{user_id}/restore")
-async def restore_user(
-        db: databaseSession,
-        user_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["user:restore", "trashed:restore"]),
-):
-    db_user = crud.select_id(db, tables.User, user_id, with_trashed=True)
-    if not db_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not exists",
-        )
-    db_user = crud.restore(db, tables.User, user_id)
     return db_user
 
 
@@ -236,6 +233,13 @@ async def delete_user_role(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User role not exists",
+        )
+    db_user = crud.select_id(db, tables.User, user_id)
+    db_role = crud.select_id(db, tables.Role, role_id)
+    if (db_user and (db_user.username == "admin")) and (db_role and (db_role.name == "superuser")):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Superuser role cannot be deleted from admin user",
         )
     return crud.delete_conditions(db, tables.UserHasRole, [
         schemas.QueryForm(key="user_id", operator="==", value=user_id),

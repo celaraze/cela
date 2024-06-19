@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='cela',
-    version='0.0.1-alpha',
+    version='0.0.2-alpha',
     packages=find_packages(),
     description='A command client for CELA.',
     long_description=open('README.md').read(),

@@ -28,7 +28,7 @@ class RoleCreateForm(BaseSchema):
     name: str
     scopes: list[str] = []
     creator_id: int = 0
-    created_at: datetime = common.now()
+    created_at: str = common.now()
 
 
 class UserChangePasswordForm(BaseSchema):
@@ -42,26 +42,26 @@ class UserCreateForm(BaseSchema):
     name: str
     password: str
     creator_id: int = 0
-    created_at: datetime = common.now()
+    created_at: str = common.now()
 
 
 class BrandCreateForm(BaseSchema):
     name: str
     creator_id: int = 0
-    created_at: datetime = common.now()
+    created_at: str = common.now()
 
 
 class DeviceCategoryCreateForm(BaseSchema):
     name: str
     creator_id: int = 0
-    created_at: datetime = common.now()
+    created_at: str = common.now()
 
 
 class UserHasRoleCreateForm(BaseSchema):
     user_id: int
     role_id: int
     creator_id: int = 0
-    created_at: datetime = common.now()
+    created_at: str = common.now()
 
 
 class UserHasDeviceCreateOrUpdateForm(BaseSchema):
@@ -72,7 +72,7 @@ class UserHasDeviceCreateOrUpdateForm(BaseSchema):
     expired_at: Union[datetime, None] = None
     status: int = 0
     creator_id: int = 0
-    created_at: datetime = common.now()
+    created_at: str = common.now()
 
 
 class FootprintCreateForm(BaseSchema):
@@ -82,7 +82,7 @@ class FootprintCreateForm(BaseSchema):
     response_status_code: int
     response_body: str
     creator_id: int = 0
-    created_at: datetime = common.now()
+    created_at: str = common.now()
 
 
 class DeviceCreateForm(BaseSchema):
@@ -95,7 +95,7 @@ class DeviceCreateForm(BaseSchema):
     brand_id: int
     category_id: int
     creator_id: int = 0
-    created_at: datetime = common.now()
+    created_at: str = common.now()
 
 
 # model schemas #
@@ -119,7 +119,7 @@ class Footprint(BaseSchema):
     response_status_code: int
     response_body: dict
     creator_id: int
-    created_at: datetime
+    created_at: str
     deleted_at: Union[datetime, None]
 
     class Config:

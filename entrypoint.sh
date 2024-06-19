@@ -10,6 +10,8 @@ jwt:
   algorithm: "HS256"
   ttl_minutes: 30
 EOF
+
+  python3 -m app.admin init_super_admin
 fi
 
 exec "$@"

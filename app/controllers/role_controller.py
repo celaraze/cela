@@ -52,6 +52,11 @@ async def create_role(
         form_data: schemas.RoleCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["role:create"]),
 ):
+    if form_data.name == "superuser":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Role name 'superuser' is reserved.",
+        )
     form_data.creator_id = current_user.id
     db_role = crud.create(db, tables.Role, form_data)
     return db_role
@@ -87,6 +92,11 @@ async def delete_role(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Role not exists",
+        )
+    if db_role.name == "superuser":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Role name 'superuser' is reserved.",
         )
     users = get_users(db, role_id)
     if users:
