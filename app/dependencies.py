@@ -22,10 +22,6 @@ def get_oauth_scheme():
         scopes={
             "su": "Super user",
 
-            "trashed:list": "Read information about trashed items.",
-            "trashed:info": "Read information about one trashed item.",
-            "trashed:restore": "Restore trashed item.",
-
             "auth:me": "Read and update information about the current user.",
 
             "role:list": "Read information about roles.",

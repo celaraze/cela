@@ -116,7 +116,7 @@ async def update_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not exists",
         )
-    for i, form in form_data:
+    for i, form in enumerate(form_data):
         if form.key not in ["username", "name", "email", "password"]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

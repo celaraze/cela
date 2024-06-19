@@ -21,6 +21,7 @@ def test_start():
 
     global admin_access_token
     global role_id
+    global device_id
 
     form_data = schemas.UserCreateForm(
         email="test_admin@test.com",
@@ -45,6 +46,30 @@ def test_start():
     assert response.status_code == 200
     role_id = response.json()['id']
 
+    form_data = {
+        "name": "test_brand",
+    }
+    response = functions.create_brand(admin_access_token, form_data)
+    assert response.status_code == 200
+    brand_id = response.json()['id']
+
+    form_data = {
+        "name": "test_device_category",
+    }
+    response = functions.create_device_category(admin_access_token, form_data)
+    assert response.status_code == 200
+    device_category_id = response.json()['id']
+
+    form_data = {
+        "hostname": "test_device",
+        "asset_number": "PC0001",
+        "brand_id": brand_id,
+        "category_id": device_category_id,
+    }
+    response = functions.create_device(admin_access_token, form_data)
+    assert response.status_code == 200
+    device_id = response.json()['id']
+
 
 def test_create():
     global user_id
@@ -66,10 +91,13 @@ def test_create():
         "role_id": role_id,
     }
 
-    response = functions.create_user_has_role(admin_access_token, form_data)
+    response = functions.create_user_has_role(admin_access_token, 3, form_data)
+    assert response.status_code == 406
+
+    response = functions.create_user_has_role(admin_access_token, user_id, form_data)
     assert response.status_code == 200
 
-    response = functions.create_user_has_role(admin_access_token, form_data)
+    response = functions.create_user_has_role(admin_access_token, user_id, form_data)
     assert response.status_code == 409
 
 
@@ -100,6 +128,9 @@ def test_renew():
 
 
 def test_select():
+    global user_access_token
+    global role_id
+
     response = functions.select_users(admin_access_token)
     assert response.status_code == 200
 
@@ -110,29 +141,84 @@ def test_select():
     assert response.status_code == 200
     assert response.json()['username'] == "test_user"
 
+    response = functions.select_users(user_access_token)
+    assert response.status_code == 403
+
+    form_data = {
+        "name": "test_role",
+        "scopes": [
+            'user:list'
+        ]
+    }
+    response = functions.create_role(admin_access_token, form_data)
+    assert response.status_code == 200
+    role_id = response.json()['id']
+
+    form_data = {
+        "user_id": user_id,
+        "role_id": role_id,
+    }
+
+    response = functions.create_user_has_role(admin_access_token, user_id, form_data)
+    assert response.status_code == 200
+
+    response = functions.renew(user_access_token)
+    assert response.status_code == 200
+    user_access_token = response.json()['access_token']
+
+    response = functions.select_users(user_access_token)
+    assert response.status_code == 200
+
 
 def test_update():
     global user_access_token
 
-    response = functions.update_user(admin_access_token, 0, "username", "test_user2")
+    update_form = [
+        {
+            "key": "name",
+            "value": "test_user2",
+        }
+    ]
+
+    response = functions.update_user(admin_access_token, 0, update_form)
     assert response.status_code == 404
 
-    response = functions.update_user(admin_access_token, user_id, "name", "test_user2")
+    response = functions.update_user(admin_access_token, user_id, update_form)
     assert response.status_code == 200
     assert response.json()['name'] == "test_user2"
 
-    response = functions.update_user(admin_access_token, user_id, "email", "test_user2@test.com")
+    update_form = [
+        {
+            "key": "email",
+            "value": "test_user2@test.com",
+        }
+    ]
+
+    response = functions.update_user(admin_access_token, user_id, update_form)
     assert response.status_code == 200
     assert response.json()['email'] == "test_user2@test.com"
 
-    response = functions.update_user(admin_access_token, user_id, "username", "test_user2")
+    update_form = [
+        {
+            "key": "username",
+            "value": "test_user2"
+        }
+    ]
+    response = functions.update_user(admin_access_token, user_id, update_form)
     assert response.status_code == 200
     response = functions.login("test_user2", "test_user")
     assert response.status_code == 200
     user_access_token = response.json()["access_token"]
     assert user_access_token
 
-    response = functions.update_user(admin_access_token, user_id, "password", "test_user2")
+    update_form = [
+        {
+            "key": "password",
+            "value": "test_user2"
+        }
+    ]
+
+    response = functions.update_user(admin_access_token, user_id, update_form)
     assert response.status_code == 200
     response = functions.login("test_user2", "test_user2")
     assert response.status_code == 200
@@ -144,8 +230,30 @@ def test_delete():
     response = functions.delete_user(admin_access_token, 0)
     assert response.status_code == 404
 
+    form_data = {
+        "user_id": user_id,
+        "device_id": device_id,
+    }
+    response = functions.user_has_device_out(admin_access_token, user_id, form_data)
+    assert response.status_code == 200
+
+    response = functions.select_devices(admin_access_token)
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+
     response = functions.delete_user(admin_access_token, user_id)
     assert response.status_code == 200
+
+    response = functions.select_user_devices(admin_access_token, user_id)
+    assert response.status_code == 200
+    assert len(response.json()) == 0
+
+    response = functions.select_user_roles(admin_access_token, user_id)
+    assert response.status_code == 200
+    assert len(response.json()) == 0
+
+    response = functions.delete_user(admin_access_token, user_id)
+    assert response.status_code == 404
 
     response = functions.select_user(admin_access_token, user_id)
     assert response.status_code == 404
