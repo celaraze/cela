@@ -5,7 +5,7 @@ services:
     restart: always
     environment:
       # Keep same credentials as in database.
-      - CELA_DATABASE_URL=mysql+pymysql://cela:password@database/cela
+      - DATABASE_URL=mysql+pymysql://cela:password@database/cela
     volumes:
       - cela_app_config:/service/app/config
     ports:

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Security
 from fastapi.security import OAuth2PasswordRequestForm
 
 from ..dependencies import get_current_user, databaseSession
+from ..services import auth
 from ..services.auth import authenticate, create_access_token
 from ..services.user import get_scopes
 from ..database import schemas, crud, tables
@@ -13,6 +14,36 @@ router = APIRouter(
     dependencies=[],
     responses={404: {"description": "Not found"}},
 )
+
+
+@router.get("/init")
+async def init(
+        db: databaseSession,
+):
+    admin = crud.select_username(db, tables.User, "admin")
+    if admin:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cela has been inited.",
+        )
+    username = "admin"
+    email = "admin@localhost"
+    name = "Admin"
+    password = "admin"
+    auth.create_super_admin(
+        db,
+        schemas.UserCreateForm(
+            username=username,
+            email=email,
+            name=name,
+            password=password,
+            creator_id=0
+        )
+    )
+    raise HTTPException(
+        status_code=status.HTTP_200_OK,
+        detail="Cela inited successfully, please login with username 'admin' and password 'admin'.",
+    )
 
 
 @router.post("/login")
