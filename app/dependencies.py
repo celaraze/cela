@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from sqlalchemy.orm import Session
 
-from .config.database import engine
+from app.database.database import engine
 from .database import schemas, crud, tables
 
 from .services.auth import decode_access_token

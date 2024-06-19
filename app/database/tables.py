@@ -1,6 +1,6 @@
 from sqlalchemy import Boolean, Column, Integer, String, DateTime, JSON
 
-from ..config.database import Base
+from app.database.database import Base
 
 
 class Footprint(Base):

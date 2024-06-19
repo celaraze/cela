@@ -24,7 +24,13 @@ Cela has the following features:
 
 Start back-end service with the following steps:
 
-`docker run -d -p 8000:8000 --name cela celaraze/cela:latest`
+Run the following when first starting. It configures the database connection.
+
+`docker run -p 8000:8000 -v env-data:/service/app/config -e DATABASE_URL="mysql+pymysql://root:password@localhost:3306/cela" celaraze/cela:latest`
+
+Run the following after the first start.
+
+`docker run -p 8000:8000 -v env-data:/service/app/config celaraze/cela:latest`
 
 Now you can visit [http://localhost:8000/docs](http://localhost:8000/docs) to view the API documentation.
 

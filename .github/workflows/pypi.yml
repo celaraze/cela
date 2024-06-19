@@ -23,7 +23,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install setuptools wheel
       - name: Build distribution
-        run: python setup.py bdist_wheel --universal
+        run: python client/setup.py bdist_wheel --universal
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@v1.8.14
         with:

@@ -3,7 +3,7 @@ from typing import Union
 from fastapi.testclient import TestClient
 from httpx import Response
 
-from app.config.database import SessionLocal, engine
+from app.database.database import SessionLocal, engine
 from app.database import schemas, tables
 from app.services import auth
 

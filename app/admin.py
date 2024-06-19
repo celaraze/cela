@@ -1,7 +1,7 @@
 import argparse
 
 from app.services import auth
-from app.config.database import engine
+from app.database.database import engine
 from .database import schemas, tables
 
 

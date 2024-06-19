@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from .database import tables
-from .config.database import engine
+from app.database.database import engine
 from .controllers import (
     auth_controller,
     role_controller,

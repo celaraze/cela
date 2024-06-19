@@ -1,9 +1,13 @@
 .vscode/
 .idea/
 
+build/
+cela.egg-info/
+dist/
+
 .venv/
 **/__pycache__/
 
 **/.DS_Store
 
-app/env.yml
+app/config/env.yml

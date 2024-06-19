@@ -41,8 +41,8 @@ jobs:
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: |
-            ${{ env.REGISTRY }}/celaraze/cat
-            ${{ env.DOCKERHUB_REGISTRY }}/celaraze/cat
+            ${{ env.REGISTRY }}/celaraze/cela
+            ${{ env.DOCKERHUB_REGISTRY }}/celaraze/cela
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest
