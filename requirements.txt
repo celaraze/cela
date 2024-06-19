@@ -6,3 +6,4 @@ bcrypt
 pytest
 sqlalchemy
 rich
+httpx[socks]

@@ -3,9 +3,6 @@ from .config import read_server_url, read_access_token
 from rich.console import Console
 from rich.table import Table
 
-SERVER_URL = read_server_url()
-ACCESS_TOKEN = read_access_token()
-
 console = Console()
 
 
@@ -24,8 +21,8 @@ def switch(args):
 
 def select_roles():
     response = httpx.get(
-        f"{SERVER_URL}/roles/",
-        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+        f"{read_server_url()}/roles/",
+        headers={"Authorization": f"Bearer {read_access_token()}"},
     )
     if response.status_code != 200:
         console.print("Failed to get roles.", style="bold red")
@@ -53,8 +50,8 @@ def select_roles():
 
 def select_role(role_id: int):
     response = httpx.get(
-        f"{SERVER_URL}/roles/{role_id}",
-        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+        f"{read_server_url()}/roles/{role_id}",
+        headers={"Authorization": f"Bearer {read_access_token()}"},
     )
     if response.status_code != 200:
         console.print("Failed to get role.", style="bold red")
@@ -86,8 +83,8 @@ def create_role(name: str, scopes: str):
         "scopes": scopes.split(","),
     }
     response = httpx.post(
-        f"{SERVER_URL}/roles/",
-        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+        f"{read_server_url()}/roles/",
+        headers={"Authorization": f"Bearer {read_access_token()}"},
         json=create_form,
     )
     if response.status_code != 200:
@@ -110,8 +107,8 @@ def update_role(role_id: int, key: str, value: str):
         }
     ]
     response = httpx.put(
-        f"{SERVER_URL}/roles/{role_id}",
-        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+        f"{read_server_url()}/roles/{role_id}",
+        headers={"Authorization": f"Bearer {read_access_token()}"},
         json=update_form,
     )
     if response.status_code != 200:
@@ -125,8 +122,8 @@ def update_role(role_id: int, key: str, value: str):
 
 def delete_role(role_id: int):
     response = httpx.delete(
-        f"{SERVER_URL}/roles/{role_id}",
-        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+        f"{read_server_url()}/roles/{role_id}",
+        headers={"Authorization": f"Bearer {read_access_token()}"},
     )
 
     if response.status_code != 200:

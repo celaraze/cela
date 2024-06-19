@@ -3,9 +3,6 @@ from .config import read_server_url, read_access_token
 from rich.console import Console
 from rich.table import Table
 
-SERVER_URL = read_server_url()
-ACCESS_TOKEN = read_access_token()
-
 console = Console()
 
 
@@ -24,8 +21,8 @@ def switch(args):
 
 def select_brands():
     response = httpx.get(
-        f"{SERVER_URL}/brands/",
-        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+        f"{read_server_url()}/brands/",
+        headers={"Authorization": f"Bearer {read_access_token()}"},
     )
     if response.status_code != 200:
         console.print("Failed to get brands.", style="bold red")
@@ -51,8 +48,8 @@ def select_brands():
 
 def select_brand(brand_id: int):
     response = httpx.get(
-        f"{SERVER_URL}/brands/{brand_id}",
-        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+        f"{read_server_url()}/brands/{brand_id}",
+        headers={"Authorization": f"Bearer {read_access_token()}"},
     )
     if response.status_code != 200:
         console.print("Failed to get brand.", style="bold red")
@@ -82,8 +79,8 @@ def create_brand(name: str):
         "name": name,
     }
     response = httpx.post(
-        f"{SERVER_URL}/brands/",
-        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+        f"{read_server_url()}/brands/",
+        headers={"Authorization": f"Bearer {read_access_token()}"},
         json=create_form,
     )
     if response.status_code != 200:
@@ -106,8 +103,8 @@ def update_brand(brand_id: int, key: str, value: str):
         }
     ]
     response = httpx.put(
-        f"{SERVER_URL}/brands/{brand_id}",
-        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+        f"{read_server_url()}/brands/{brand_id}",
+        headers={"Authorization": f"Bearer {read_access_token()}"},
         json=update_form,
     )
     if response.status_code != 200:
@@ -121,8 +118,8 @@ def update_brand(brand_id: int, key: str, value: str):
 
 def delete_brand(brand_id: int):
     response = httpx.delete(
-        f"{SERVER_URL}/brand/{brand_id}",
-        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+        f"{read_server_url()}/brand/{brand_id}",
+        headers={"Authorization": f"Bearer {read_access_token()}"},
     )
 
     if response.status_code != 200:

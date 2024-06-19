@@ -61,8 +61,8 @@ def main():
 
     # cela role create <name> <scopes>
     role_create_subparser = role_action_subparsers.add_parser('create')
-    role_create_subparser.add_argument('name', type=str, help='Name of the role.')
-    role_create_subparser.add_argument('scopes', type=str, help='Scopes of the role.')
+    role_create_subparser.add_argument('--name', type=str, help='Name of the role.')
+    role_create_subparser.add_argument('--scopes', type=str, help='Scopes of the role.')
 
     # cela role update <role_id> <key> <value>
     role_update_subparser = role_action_subparsers.add_parser('update')
@@ -88,7 +88,7 @@ def main():
 
     # cela brand create <name>
     brand_create_subparser = brand_action_subparsers.add_parser('create')
-    brand_create_subparser.add_argument('name', type=str, help='Name of the brand.')
+    brand_create_subparser.add_argument('--name', type=str, help='Name of the brand.')
 
     # cela brand update <brand_id> <key> <value>
     brand_update_subparser = brand_action_subparsers.add_parser('update')
@@ -113,7 +113,7 @@ def main():
 
     # cela device_category create <name> <scopes>
     device_category_create_subparser = device_category_action_subparsers.add_parser('create')
-    device_category_create_subparser.add_argument('name', type=str, help='Name of the device category.')
+    device_category_create_subparser.add_argument('--name', type=str, help='Name of the device category.')
 
     # cela device_category update <device_category_id> <key> <value>
     device_category_update_subparser = device_category_action_subparsers.add_parser('update')
@@ -139,7 +139,14 @@ def main():
 
     # cela device create <name>
     device_create_subparser = device_action_subparsers.add_parser('create')
-    device_create_subparser.add_argument('name', type=str, help='Name of the device.')
+    device_create_subparser.add_argument('--hostname', type=str, help='Name of the device.')
+    device_create_subparser.add_argument('--asset-number', type=str, help='Name of the device.')
+    device_create_subparser.add_argument('--ipv4-address', type=str, help='Name of the device.')
+    device_create_subparser.add_argument('--ipv6-address', type=str, help='Name of the device.')
+    device_create_subparser.add_argument('--mac-address', type=str, help='Name of the device.')
+    device_create_subparser.add_argument('--description', type=str, help='Name of the device.')
+    device_create_subparser.add_argument('--brand-id', type=str, help='Name of the device.')
+    device_create_subparser.add_argument('--category-id', type=str, help='Name of the device.')
 
     # cela device update <device_id> <key> <value>
     device_update_subparser = device_action_subparsers.add_parser('update')
