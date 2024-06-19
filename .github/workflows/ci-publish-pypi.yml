@@ -1,3 +1,5 @@
+name: CI for publishing to pypi
+
 on:
   push:
     tags:

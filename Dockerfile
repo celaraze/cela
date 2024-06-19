@@ -4,6 +4,8 @@ WORKDIR /service
 
 ADD . /service
 
+RUN rm /service/app/config/env.yml
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 RUN chmod +x entrypoint.sh

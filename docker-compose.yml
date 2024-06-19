@@ -1,0 +1,30 @@
+services:
+  app:
+    image: celaraze/cela:latest
+    container_name: cela-app
+    restart: always
+    environment:
+      - CELA_DATABASE_URL=mysql+pymysql://cela:password@database:3306/cela
+    volumes:
+      - cela_app_config:/service/app/config
+    ports:
+      - 8000:8000/tcp
+    depends_on:
+      - database
+
+  database:
+    image: mysql:8.3
+    container_name: cela-database
+    restart: always
+    command: --character-set-server=utf8mb4
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_USER=cela
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=cela
+    volumes:
+      - cela_database_data:/var/lib/mysql
+
+volumes:
+  cela_app_config:
+  cela_database_data:

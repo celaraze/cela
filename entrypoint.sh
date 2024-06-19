@@ -1,8 +1,8 @@
 #!/bin/sh
 
-if [ ! -f app/config/env.yml ]; then
+if [ ! -f /service/app/config/env.yml ]; then
   SECRET=$(openssl rand -hex 32)
-  cat << EOF > app/config/env.yml
+  cat << EOF > /service/app/config/env.yml
 database:
   url: "$DATABASE_URL"
 jwt:

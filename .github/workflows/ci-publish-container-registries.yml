@@ -1,4 +1,4 @@
-name: CI for publishing container image
+name: CI for publishing to container registries
 
 on:
   push:
