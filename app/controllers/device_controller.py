@@ -17,7 +17,7 @@ router = APIRouter(
 # APIs for device.
 
 # Get all devices.
-@router.get("/")
+@router.get("/", response_model=list[schemas.Device])
 async def get_devices(
         db: databaseSession,
         skip: int = 0,
@@ -27,12 +27,12 @@ async def get_devices(
 ):
     devices = crud.select_all(db, tables.Device, skip=skip, limit=limit)
     if asset_number:
-        devices = crud.select_asset_number(db, tables.Device, asset_number)
+        devices = [crud.select_asset_number(db, tables.Device, asset_number)]
     return devices
 
 
 # Get device by id.
-@router.get("/{device_id}")
+@router.get("/{device_id}", response_model=schemas.Device)
 async def get_device(
         db: databaseSession,
         device_id: int,
@@ -44,13 +44,14 @@ async def get_device(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device not exists",
         )
+    device.creator = crud.select_id(db, tables.User, device.creator_id)
     user = get_user(db, device_id)
     device.user = user
     return device
 
 
 # Create device.
-@router.post("/")
+@router.post("/", response_model=schemas.Device)
 async def create_device(
         db: databaseSession,
         form_data: schemas.DeviceCreateForm,
@@ -80,7 +81,7 @@ async def create_device(
 
 
 # Update device.
-@router.put("/{device_id}")
+@router.put("/{device_id}", response_model=schemas.Device)
 async def update_device(
         db: databaseSession,
         device_id: int,
@@ -120,7 +121,7 @@ async def update_device(
 
 
 # Delete device.
-@router.delete("/{device_id}")
+@router.delete("/{device_id}", response_model=schemas.Device)
 async def delete_device(
         db: databaseSession,
         device_id: int,
@@ -138,5 +139,5 @@ async def delete_device(
             status_code=status.HTTP_409_CONFLICT,
             detail="Device has users, please update them first.",
         )
-    db_brand = crud.delete(db, tables.Device, device_id)
-    return db_brand
+    db_device = crud.delete(db, tables.Device, device_id)
+    return db_device

@@ -55,6 +55,7 @@ def test_select():
     assert response.status_code == 404
 
     response = functions.select_role(admin_access_token, role_id)
+    print(response.json())
     assert response.status_code == 200
     assert response.json()['name'] == "test_role"
 

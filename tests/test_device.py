@@ -114,7 +114,7 @@ def test_select():
 
     response = functions.select_devices(admin_access_token, "PC0001")
     assert response.status_code == 200
-    assert response.json()['hostname'] == "test_device"
+    assert response.json()[0]['hostname'] == "test_device"
 
     response = functions.select_device(admin_access_token, device_id)
     assert response.status_code == 200

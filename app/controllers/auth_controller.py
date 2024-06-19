@@ -42,7 +42,7 @@ async def init(
     )
     raise HTTPException(
         status_code=status.HTTP_200_OK,
-        detail="Cela inited successfully, please login with username 'admin' and password 'admin'.",
+        detail="Cela inited successfully, please login with username 'admin' and password 'admin' by default.",
     )
 
 

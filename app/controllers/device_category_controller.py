@@ -17,7 +17,7 @@ router = APIRouter(
 # APIs for device category.
 
 # Get all device categories.
-@router.get("/")
+@router.get("/", response_model=list[schemas.DeviceCategory])
 async def get_device_categories(
         db: databaseSession,
         skip: int = 0,
@@ -29,7 +29,7 @@ async def get_device_categories(
 
 
 # Get device category by id.
-@router.get("/{device_category_id}")
+@router.get("/{device_category_id}", response_model=schemas.DeviceCategory)
 async def get_device_category(
         db: databaseSession,
         device_category_id: int,
@@ -41,11 +41,12 @@ async def get_device_category(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device Category not exists",
         )
+    device_category.creator = crud.select_id(db, tables.User, device_category.creator_id)
     return device_category
 
 
 # Create device category.
-@router.post("/")
+@router.post("/", response_model=schemas.DeviceCategory)
 async def create_device_category(
         db: databaseSession,
         form_data: schemas.DeviceCategoryCreateForm,
@@ -57,7 +58,7 @@ async def create_device_category(
 
 
 # Update device category.
-@router.put("/{device_category_id}")
+@router.put("/{device_category_id}", response_model=schemas.DeviceCategory)
 async def update_device_category(
         db: databaseSession,
         device_category_id: int,
@@ -75,7 +76,7 @@ async def update_device_category(
 
 
 # Delete device category.
-@router.delete("/{device_category_id}")
+@router.delete("/{device_category_id}", response_model=schemas.DeviceCategory)
 async def delete_device_category(
         db: databaseSession,
         device_category_id: int,

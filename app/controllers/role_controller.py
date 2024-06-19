@@ -18,7 +18,7 @@ router = APIRouter(
 
 
 # Get all roles.
-@router.get("/")
+@router.get("/", response_model=list[schemas.Role])
 async def get_roles(
         db: databaseSession,
         skip: int = 0,
@@ -30,7 +30,7 @@ async def get_roles(
 
 
 # Get role by id.
-@router.get("/{role_id}")
+@router.get("/{role_id}", response_model=schemas.Role)
 async def get_role(
         db: databaseSession,
         role_id: int,
@@ -42,11 +42,12 @@ async def get_role(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Role not exists",
         )
+    role.creator = crud.select_id(db, tables.User, role.creator_id)
     return role
 
 
 # Create role.
-@router.post("/")
+@router.post("/", response_model=schemas.Role)
 async def create_role(
         db: databaseSession,
         form_data: schemas.RoleCreateForm,
@@ -63,7 +64,7 @@ async def create_role(
 
 
 # Update role.
-@router.put("/{role_id}")
+@router.put("/{role_id}", response_model=schemas.Role)
 async def update_role(
         db: databaseSession,
         role_id: int,
@@ -76,12 +77,17 @@ async def update_role(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Role not exists",
         )
+    if db_role.name == "superuser":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Role name 'superuser' is reserved.",
+        )
     db_role = crud.update(db, tables.Role, db_role.id, form_data)
     return db_role
 
 
 # Delete role.
-@router.delete("/{role_id}")
+@router.delete("/{role_id}", response_model=schemas.Role)
 async def delete_role(
         db: databaseSession,
         role_id: int,

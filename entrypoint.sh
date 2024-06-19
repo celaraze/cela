@@ -8,7 +8,7 @@ database:
 jwt:
   secret: "$SECRET"
   algorithm: "HS256"
-  ttl_minutes: 30
+  ttl_minutes: 525600
 EOF
 
 fi

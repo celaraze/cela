@@ -18,7 +18,7 @@ router = APIRouter(
 
 
 # Get all brands.
-@router.get("/")
+@router.get("/", response_model=list[schemas.Brand])
 async def get_brands(
         db: databaseSession,
         skip: int = 0,
@@ -30,7 +30,7 @@ async def get_brands(
 
 
 # Get brand by id.
-@router.get("/{brand_id}")
+@router.get("/{brand_id}", response_model=schemas.Brand)
 async def get_brand(
         db: databaseSession,
         brand_id: int,
@@ -42,11 +42,12 @@ async def get_brand(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Brand not exists",
         )
+    brand.creator = crud.select_id(db, tables.User, brand.creator_id)
     return brand
 
 
 # Create brand.
-@router.post("/")
+@router.post("/", response_model=schemas.Brand)
 async def create_brand(
         db: databaseSession,
         form_data: schemas.BrandCreateForm,
@@ -58,7 +59,7 @@ async def create_brand(
 
 
 # Update brand.
-@router.put("/{brand_id}")
+@router.put("/{brand_id}", response_model=schemas.Brand)
 async def update_brand(
         db: databaseSession,
         brand_id: int,
@@ -76,7 +77,7 @@ async def update_brand(
 
 
 # Delete brand.
-@router.delete("/{brand_id}")
+@router.delete("/{brand_id}", response_model=schemas.Brand)
 async def delete_brand(
         db: databaseSession,
         brand_id: int,

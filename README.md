@@ -26,6 +26,8 @@ Start back-end service with checking `docker-compose.yml` and run the following:
 
 `docker-compose up -d`
 
+And then you need to `GET` [http://localhost:8000/auth/init](http://localhost:8000/auth/init) to initialize the admin.
+
 Now you can visit [http://localhost:8000/docs](http://localhost:8000/docs) to view the API documentation.
 
 Tips: The image cannot be used now, because it still needs to be developed.

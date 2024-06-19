@@ -12,7 +12,8 @@ class AuthTokenData(BaseSchema):
     scopes: list[str] = []
 
 
-# form schemas #
+# Form schemas.
+
 class UpdateForm(BaseSchema):
     key: str
     value: Any
@@ -98,7 +99,15 @@ class DeviceCreateForm(BaseSchema):
     created_at: str = common.now()
 
 
-# model schemas #
+# Model schemas.
+class Creator(BaseSchema):
+    id: int
+    name: str
+    username: str
+    email: str
+    is_active: bool
+
+
 class Role(BaseSchema):
     id: int
     name: str
@@ -106,6 +115,7 @@ class Role(BaseSchema):
     creator_id: int
     created_at: Union[datetime, None]
     deleted_at: Union[datetime, None]
+    creator: Union[Creator, None] = None
 
     class Config:
         from_attributes = True
@@ -121,6 +131,7 @@ class Footprint(BaseSchema):
     creator_id: int
     created_at: str
     deleted_at: Union[datetime, None]
+    creator: Union[Creator, None] = None
 
     class Config:
         from_attributes = True
@@ -133,6 +144,7 @@ class UserHasRole(BaseSchema):
     creator_id: int
     created_at: Union[datetime, None]
     deleted_at: Union[datetime, None]
+    creator: Union[Creator, None] = None
 
     class Config:
         from_attributes = True
@@ -149,6 +161,7 @@ class UserHasDevice(BaseSchema):
     creator_id: int
     created_at: Union[datetime, None]
     deleted_at: Union[datetime, None]
+    creator: Union[Creator, None] = None
 
     class Config:
         from_attributes = True
@@ -160,6 +173,7 @@ class Brand(BaseSchema):
     creator_id: int
     created_at: Union[datetime, None]
     deleted_at: Union[datetime, None]
+    creator: Union[Creator, None] = None
 
     class Config:
         from_attributes = True
@@ -171,6 +185,7 @@ class DeviceCategory(BaseSchema):
     creator_id: int
     created_at: Union[datetime, None]
     deleted_at: Union[datetime, None]
+    creator: Union[Creator, None] = None
 
     class Config:
         from_attributes = True
@@ -184,12 +199,13 @@ class Device(BaseSchema):
     ipv6_address: Union[str, None]
     mac_address: Union[str, None]
     description: Union[str, None]
-    brand: Brand
-    category: DeviceCategory
+    brand: Union[Brand, None] = None
+    category: Union[DeviceCategory, None] = None
     creator_id: int
     created_at: Union[datetime, None]
     deleted_at: Union[datetime, None]
-    user: Any
+    user: Union[Any, None] = None
+    creator: Union[Creator, None] = None
 
     class Config:
         from_attributes = True
@@ -204,6 +220,7 @@ class User(BaseSchema):
     creator_id: int
     created_at: Union[datetime, None]
     deleted_at: Union[datetime, None]
+    creator: Union[Creator, None] = None
     roles: list[Role] = []
     scopes: list[str] = []
     devices: list[Device] = []

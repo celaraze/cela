@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Security
 
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
 from ..database import schemas, crud, tables
-from ..utils import crypt, common
+from ..utils import crypt
 from ..services.user import get_roles, get_devices
 from ..services.device import returned
 
@@ -19,7 +19,7 @@ router = APIRouter(
 # APIs for user.
 
 # Get all users.
-@router.get("/")
+@router.get("/", response_model=list[schemas.User])
 async def get_users(
         db: databaseSession,
         skip: int = 0,
@@ -30,21 +30,8 @@ async def get_users(
     return users
 
 
-# Get all trashed users.
-# Reserved for admin.
-@router.get("/trashed")
-async def get_users_trashed(
-        db: databaseSession,
-        skip: int = 0,
-        limit: int = 100,
-        current_user: schemas.User = Security(get_current_user, scopes=["user:list", "trashed:list"]),
-):
-    users = crud.select_all_with_trashed(db, tables.User, skip=skip, limit=limit)
-    return users
-
-
 # Get user by id.
-@router.get("/{user_id}")
+@router.get("/{user_id}", response_model=schemas.User)
 async def get_user(
         db: databaseSession,
         user_id: int = None,
@@ -56,25 +43,9 @@ async def get_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not exists",
         )
+    user.creator = crud.select_id(db, tables.User, user.creator_id)
     user.roles = get_roles(db, user.id)
     user.devices = get_devices(db, user.id)
-    return user
-
-
-# Get trashed user by id.
-# Reserved for admin.
-@router.get("/{user_id}/trashed")
-async def get_user_trashed(
-        db: databaseSession,
-        user_id: int = None,
-        current_user: schemas.User = Security(get_current_user, scopes=["user:info", "trashed:info"]),
-):
-    user = crud.select_id(db, tables.User, user_id, with_trashed=True)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not exists",
-        )
     return user
 
 
@@ -85,6 +56,11 @@ async def create_user(
         form_data: schemas.UserCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["user:create"]),
 ):
+    if form_data.username == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username name 'admin' is reserved.",
+        )
     db_user = crud.select_email(db, tables.User, form_data.email)
     if db_user:
         raise HTTPException(
@@ -97,18 +73,13 @@ async def create_user(
             status_code=status.HTTP_409_CONFLICT,
             detail="Username already exists",
         )
-    if db_user.username == "admin":
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Username name 'admin' is reserved.",
-        )
     form_data.creator_id = current_user.id
     db_user = crud.create_user(db, tables.User, form_data)
     return db_user
 
 
 # Update user.
-@router.put("/{user_id}")
+@router.put("/{user_id}", response_model=schemas.User)
 async def update_user(
         db: databaseSession,
         user_id: int,
@@ -141,7 +112,7 @@ async def update_user(
 
 
 # Soft delete user.
-@router.delete("/{user_id}")
+@router.delete("/{user_id}", response_model=schemas.User)
 async def delete_user(
         db: databaseSession,
         user_id: int,
@@ -169,18 +140,18 @@ async def delete_user(
 # API for user has role.
 
 # Get all user's roles.
-@router.get("/{user_id}/roles")
+@router.get("/{user_id}/roles", response_model=list[schemas.Role])
 async def get_user_roles(
         db: databaseSession,
         user_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:list"]),
 ):
-    user_roles = get_roles(db, user_id)
-    return user_roles
+    roles = get_roles(db, user_id)
+    return roles
 
 
 # Create user's role.
-@router.post("/{user_id}/roles")
+@router.post("/{user_id}/roles", response_model=schemas.UserHasRole)
 async def create_user_role(
         db: databaseSession,
         user_id: int,
@@ -218,7 +189,7 @@ async def create_user_role(
 
 
 # Delete user's role.
-@router.delete("/{user_id}/roles/{role_id}")
+@router.delete("/{user_id}/roles/{role_id}", response_model=list[schemas.UserHasRole])
 async def delete_user_role(
         db: databaseSession,
         user_id: int,
@@ -250,18 +221,18 @@ async def delete_user_role(
 # API for user has device.
 
 # Get all user's devices.
-@router.get("/{user_id}/devices")
+@router.get("/{user_id}/devices", response_model=list[schemas.Device])
 async def get_user_devices(
         db: databaseSession,
         user_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["user_has_device:list"]),
 ):
-    user_devices = get_devices(db, user_id)
-    return user_devices
+    devices = get_devices(db, user_id)
+    return devices
 
 
 # Create user's device.
-@router.post("/{user_id}/devices/out")
+@router.post("/{user_id}/devices/out", response_model=schemas.UserHasDevice)
 async def create_user_device(
         db: databaseSession,
         user_id: int,
