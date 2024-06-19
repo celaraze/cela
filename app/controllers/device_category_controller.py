@@ -39,9 +39,9 @@ async def get_device_category(
     if not device_category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Device Category not exists",
+            detail="Device Category not exists.",
         )
-    device_category.creator = crud.select_id(db, tables.User, device_category.creator_id)
+    device_category.creator = crud.select_creator(db, tables.User, device_category.creator_id)
     return device_category
 
 
@@ -69,7 +69,7 @@ async def update_device_category(
     if not db_device_category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Device Category not exists",
+            detail="Device Category not exists.",
         )
     db_device_category = crud.update(db, tables.DeviceCategory, device_category_id, form_data)
     return db_device_category
@@ -86,7 +86,7 @@ async def delete_device_category(
     if not db_device_category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Device Category not exists",
+            detail="Device Category not exists.",
         )
     devices = get_devices(db, device_category_id)
     if devices:

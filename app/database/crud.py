@@ -262,3 +262,14 @@ def copy(
     db.commit()
     db.refresh(new_db_record)
     return new_db_record
+
+
+def select_creator(
+        db,
+        table,
+        creator_id,
+):
+    creator = select_id(db, table, creator_id)
+    if not creator:
+        return None
+    return creator

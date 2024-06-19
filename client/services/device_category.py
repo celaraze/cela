@@ -11,96 +11,92 @@ console = Console()
 
 def switch(args):
     if args.action == "list":
-        select_roles()
+        select_device_categories()
     if args.action == "info":
-        select_role(args.role_id)
+        select_device_category(args.device_category_id)
     if args.action == "create":
-        create_role(args.name, args.scopes)
+        create_device_category(args.name)
     if args.action == "update":
-        update_role(args.role_id, args.key, args.value)
+        update_device_category(args.device_category_id, args.key, args.value)
     if args.action == "delete":
-        delete_role(args.role_id)
+        delete_device_category(args.device_category_id)
 
 
-def select_roles():
+def select_device_categories():
     response = httpx.get(
-        f"{SERVER_URL}/roles/",
+        f"{SERVER_URL}/device_categories/",
         headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
     )
     if response.status_code != 200:
-        console.print("Failed to get roles.", style="bold red")
+        console.print("Failed to get device categories.", style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'], style="bold")
         return
 
-    roles = response.json()
+    device_categories = response.json()
 
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("ID", style="dim", width=12)
     table.add_column("Name")
-    table.add_column("Scopes")
 
-    for role in roles:
+    for device_category in device_categories:
         table.add_row(
-            str(role["id"]),
-            role["name"],
-            ", ".join(role["scopes"]),
+            str(device_category["id"]),
+            device_category["name"],
         )
 
-    console.print("Roles", response.status_code, style="bold green")
+    console.print("Device Categories", response.status_code, style="bold green")
     console.print(table)
 
 
-def select_role(role_id: int):
+def select_device_category(device_category_id: int):
     response = httpx.get(
-        f"{SERVER_URL}/roles/{role_id}",
+        f"{SERVER_URL}/device_categories/{device_category_id}",
         headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
     )
     if response.status_code != 200:
-        console.print("Failed to get role.", style="bold red")
+        console.print("Failed to get device_category.", style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'], style="bold")
         return
 
-    role = response.json()
+    device_category = response.json()
 
-    console.print("Role", response.status_code, style="bold green")
+    console.print("Device Category", response.status_code, style="bold green")
 
-    if role:
+    if device_category:
         table = Table(show_header=True, header_style="bold magenta")
         table.add_column("Fields")
         table.add_column("Values")
-        table.add_row("ID", str(role['id']))
-        table.add_row("Name", role['name'])
-        table.add_row("Scopes", ", ".join(role['scopes']))
-        table.add_row("Created At", role['created_at'])
-        if role['creator']:
-            table.add_row("Creator", f"{role['creator']['name']} ({role['creator']['username']})")
+        table.add_row("ID", str(device_category['id']))
+        table.add_row("Name", device_category['name'])
+        table.add_row("Created At", device_category['created_at'])
+        if device_category['creator']:
+            table.add_row("Creator", f"{device_category['creator']['name']} ({device_category['creator']['username']})")
 
         console.print(table)
 
 
-def create_role(name: str, scopes: str):
+def create_device_category(name: str):
     create_form = {
         "name": name,
-        "scopes": scopes.split(","),
     }
     response = httpx.post(
-        f"{SERVER_URL}/roles/",
+        f"{SERVER_URL}/device_categories/",
         headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
         json=create_form,
     )
     if response.status_code != 200:
-        console.print("Failed to create role.", style="bold red")
+        console.print("Failed to create device category.", style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'], style="bold")
         return
 
-    console.print("Role created successfully.", style="bold green")
-    console.print(f"The new role id: {response.json()['id']}")
+    console.print("Device category created successfully.", style="bold green")
+    console.print(f"The new device category id: {response.json()['id']}")
 
 
-def update_role(role_id: int, key: str, value: str):
+def update_device_category(device_category_id: int, key: str, value: str):
     if value == "null":
         value = None
     update_form = [
@@ -110,29 +106,29 @@ def update_role(role_id: int, key: str, value: str):
         }
     ]
     response = httpx.put(
-        f"{SERVER_URL}/roles/{role_id}",
+        f"{SERVER_URL}/device_categories/{device_category_id}",
         headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
         json=update_form,
     )
     if response.status_code != 200:
-        console.print("Failed to update role.", style="bold red")
+        console.print("Failed to update device category.", style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'], style="bold")
         return
 
-    console.print("Role updated successfully.", style="bold green")
+    console.print("Device category updated successfully.", style="bold green")
 
 
-def delete_role(role_id: int):
+def delete_device_category(device_category_id: int):
     response = httpx.delete(
-        f"{SERVER_URL}/roles/{role_id}",
+        f"{SERVER_URL}/device_categories/{device_category_id}",
         headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
     )
 
     if response.status_code != 200:
-        console.print("Failed to delete role.", style="bold red")
+        console.print("Failed to delete device category.", style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'], style="bold")
         return
 
-    console.print("Role deleted successfully.", style="bold green")
+    console.print("Device category deleted successfully.", style="bold green")

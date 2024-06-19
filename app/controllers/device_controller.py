@@ -42,9 +42,9 @@ async def get_device(
     if not device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Device not exists",
+            detail="Device not exists.",
         )
-    device.creator = crud.select_id(db, tables.User, device.creator_id)
+    device.creator = crud.select_creator(db, tables.User, device.creator_id)
     user = get_user(db, device_id)
     device.user = user
     return device
@@ -61,19 +61,19 @@ async def create_device(
     if db_device:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Device asset number already exists",
+            detail="Device asset number already exists.",
         )
     db_brand = crud.select_id(db, tables.Brand, form_data.brand_id)
     if not db_brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Brand not exists",
+            detail="Brand not exists.",
         )
     db_device_category = crud.select_id(db, tables.DeviceCategory, form_data.category_id)
     if not db_device_category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Device category not exists",
+            detail="Device category not exists.",
         )
     form_data.creator_id = current_user.id
     db_device = crud.create(db, tables.Device, form_data)
@@ -92,7 +92,7 @@ async def update_device(
     if not db_device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Device not exists",
+            detail="Device not exists.",
         )
     for form in form_data:
         if form.key == "brand_id":
@@ -100,19 +100,19 @@ async def update_device(
             if not db_brand:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Brand not exists",
+                    detail="Brand not exists.",
                 )
         elif form.key == "category_id":
             db_device_category = crud.select_id(db, tables.DeviceCategory, form.value)
             if not db_device_category:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Device category not exists",
+                    detail="Device category not exists.",
                 )
         elif form.key == "asset_number":
             raise HTTPException(
                 status_code=status.HTTP_423_LOCKED,
-                detail="Asset number cannot be updated",
+                detail="Asset number cannot be updated.",
             )
         else:
             continue
@@ -131,7 +131,7 @@ async def delete_device(
     if not db_device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Device not exists",
+            detail="Device not exists.",
         )
     users = get_user(db, device_id)
     if users:

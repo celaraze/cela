@@ -40,9 +40,9 @@ async def get_role(
     if not role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Role not exists",
+            detail="Role not exists.",
         )
-    role.creator = crud.select_id(db, tables.User, role.creator_id)
+    role.creator = crud.select_creator(db, tables.User, role.creator_id)
     return role
 
 
@@ -75,7 +75,7 @@ async def update_role(
     if not db_role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Role not exists",
+            detail="Role not exists.",
         )
     if db_role.name == "superuser":
         raise HTTPException(
@@ -97,7 +97,7 @@ async def delete_role(
     if not db_role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Role not exists",
+            detail="Role not exists.",
         )
     if db_role.name == "superuser":
         raise HTTPException(

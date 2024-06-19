@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, JSON
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, JSON, Text
 
 from app.database.database import Base
 
@@ -95,3 +95,12 @@ class UserHasDevice(Base):
     creator_id = Column(Integer, nullable=True, comment="创建者 ID")
     created_at = Column(DateTime, nullable=True, comment="创建时间")
     deleted_at = Column(DateTime, nullable=True, comment="删除时间")
+
+
+class Ticket(Base):
+    __tablename__ = "tickets"
+    id = Column(Integer, primary_key=True, comment="ID")
+    title = Column(String(255), comment="标题")
+    content = Column(Text, comment="内容")
+    device_id = Column(Integer, nullable=True, comment="设备 ID")
+

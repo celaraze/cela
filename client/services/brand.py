@@ -11,96 +11,92 @@ console = Console()
 
 def switch(args):
     if args.action == "list":
-        select_roles()
+        select_brands()
     if args.action == "info":
-        select_role(args.role_id)
+        select_brand(args.brand_id)
     if args.action == "create":
-        create_role(args.name, args.scopes)
+        create_brand(args.name)
     if args.action == "update":
-        update_role(args.role_id, args.key, args.value)
+        update_brand(args.brand_id, args.key, args.value)
     if args.action == "delete":
-        delete_role(args.role_id)
+        delete_brand(args.brand_id)
 
 
-def select_roles():
+def select_brands():
     response = httpx.get(
-        f"{SERVER_URL}/roles/",
+        f"{SERVER_URL}/brands/",
         headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
     )
     if response.status_code != 200:
-        console.print("Failed to get roles.", style="bold red")
+        console.print("Failed to get brands.", style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'], style="bold")
         return
 
-    roles = response.json()
+    brands = response.json()
 
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("ID", style="dim", width=12)
     table.add_column("Name")
-    table.add_column("Scopes")
 
-    for role in roles:
+    for brand in brands:
         table.add_row(
-            str(role["id"]),
-            role["name"],
-            ", ".join(role["scopes"]),
+            str(brand["id"]),
+            brand["name"],
         )
 
-    console.print("Roles", response.status_code, style="bold green")
+    console.print("Brands", response.status_code, style="bold green")
     console.print(table)
 
 
-def select_role(role_id: int):
+def select_brand(brand_id: int):
     response = httpx.get(
-        f"{SERVER_URL}/roles/{role_id}",
+        f"{SERVER_URL}/brands/{brand_id}",
         headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
     )
     if response.status_code != 200:
-        console.print("Failed to get role.", style="bold red")
+        console.print("Failed to get brand.", style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'], style="bold")
         return
 
-    role = response.json()
+    brand = response.json()
 
     console.print("Role", response.status_code, style="bold green")
 
-    if role:
+    if brand:
         table = Table(show_header=True, header_style="bold magenta")
         table.add_column("Fields")
         table.add_column("Values")
-        table.add_row("ID", str(role['id']))
-        table.add_row("Name", role['name'])
-        table.add_row("Scopes", ", ".join(role['scopes']))
-        table.add_row("Created At", role['created_at'])
-        if role['creator']:
-            table.add_row("Creator", f"{role['creator']['name']} ({role['creator']['username']})")
+        table.add_row("ID", str(brand['id']))
+        table.add_row("Name", brand['name'])
+        table.add_row("Created At", brand['created_at'])
+        if brand['creator']:
+            table.add_row("Creator", f"{brand['creator']['name']} ({brand['creator']['username']})")
 
         console.print(table)
 
 
-def create_role(name: str, scopes: str):
+def create_brand(name: str):
     create_form = {
         "name": name,
-        "scopes": scopes.split(","),
     }
     response = httpx.post(
-        f"{SERVER_URL}/roles/",
+        f"{SERVER_URL}/brands/",
         headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
         json=create_form,
     )
     if response.status_code != 200:
-        console.print("Failed to create role.", style="bold red")
+        console.print("Failed to create brand.", style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'], style="bold")
         return
 
-    console.print("Role created successfully.", style="bold green")
-    console.print(f"The new role id: {response.json()['id']}")
+    console.print("Brand created successfully.", style="bold green")
+    console.print(f"The new brand id: {response.json()['id']}")
 
 
-def update_role(role_id: int, key: str, value: str):
+def update_brand(brand_id: int, key: str, value: str):
     if value == "null":
         value = None
     update_form = [
@@ -110,29 +106,29 @@ def update_role(role_id: int, key: str, value: str):
         }
     ]
     response = httpx.put(
-        f"{SERVER_URL}/roles/{role_id}",
+        f"{SERVER_URL}/brands/{brand_id}",
         headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
         json=update_form,
     )
     if response.status_code != 200:
-        console.print("Failed to update role.", style="bold red")
+        console.print("Failed to update brand.", style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'], style="bold")
         return
 
-    console.print("Role updated successfully.", style="bold green")
+    console.print("Brand updated successfully.", style="bold green")
 
 
-def delete_role(role_id: int):
+def delete_brand(brand_id: int):
     response = httpx.delete(
-        f"{SERVER_URL}/roles/{role_id}",
+        f"{SERVER_URL}/brand/{brand_id}",
         headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
     )
 
     if response.status_code != 200:
-        console.print("Failed to delete role.", style="bold red")
+        console.print("Failed to delete brand.", style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'], style="bold")
         return
 
-    console.print("Role deleted successfully.", style="bold green")
+    console.print("Brand deleted successfully.", style="bold green")

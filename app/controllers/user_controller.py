@@ -41,9 +41,9 @@ async def get_user(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not exists",
+            detail="User not exists.",
         )
-    user.creator = crud.select_id(db, tables.User, user.creator_id)
+    user.creator = crud.select_creator(db, tables.User, user.creator_id)
     user.roles = get_roles(db, user.id)
     user.devices = get_devices(db, user.id)
     return user
@@ -65,13 +65,13 @@ async def create_user(
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Email already exists",
+            detail="Email already exists.",
         )
     db_user = crud.select_username(db, tables.User, form_data.username)
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Username already exists",
+            detail="Username already exists.",
         )
     form_data.creator_id = current_user.id
     db_user = crud.create_user(db, tables.User, form_data)
@@ -90,7 +90,7 @@ async def update_user(
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not exists",
+            detail="User not exists.",
         )
     for i, form in enumerate(form_data):
         if form.key not in ["username", "name", "email", "password"]:
@@ -122,7 +122,7 @@ async def delete_user(
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not exists",
+            detail="User not exists.",
         )
     if db_user.username == "admin":
         raise HTTPException(
@@ -161,19 +161,19 @@ async def create_user_role(
     if user_id != form_data.user_id:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="User id mismatch",
+            detail="User id mismatch.",
         )
     db_user = crud.select_id(db, tables.User, user_id)
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not exists",
+            detail="User not exists.",
         )
     db_role = crud.select_id(db, tables.Role, form_data.role_id)
     if not db_role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Role not exists",
+            detail="Role not exists.",
         )
     db_user_has_role = crud.selects(db, tables.UserHasRole, [
         schemas.QueryForm(key="user_id", operator="==", value=user_id),
@@ -182,7 +182,7 @@ async def create_user_role(
     if db_user_has_role:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="User role already exists",
+            detail="User role already exists.",
         )
     db_user_has_role = crud.create(db, tables.UserHasRole, form_data)
     return db_user_has_role
@@ -203,14 +203,14 @@ async def delete_user_role(
     if not db_user_has_role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User role not exists",
+            detail="User role not exists.",
         )
     db_user = crud.select_id(db, tables.User, user_id)
     db_role = crud.select_id(db, tables.Role, role_id)
     if (db_user and (db_user.username == "admin")) and (db_role and (db_role.name == "superuser")):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Superuser role cannot be deleted from admin user",
+            detail="Superuser role cannot be deleted from admin user.",
         )
     return crud.delete_conditions(db, tables.UserHasRole, [
         schemas.QueryForm(key="user_id", operator="==", value=user_id),
@@ -242,19 +242,19 @@ async def create_user_device(
     if user_id != form_data.user_id:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="User id mismatch",
+            detail="User id mismatch.",
         )
     db_user = crud.select_id(db, tables.User, user_id)
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not exists",
+            detail="User not exists.",
         )
     db_device = crud.select_id(db, tables.Device, form_data.device_id)
     if not db_device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Device not exists",
+            detail="Device not exists.",
         )
     db_user_has_device = crud.selects(db, tables.UserHasDevice, [
         schemas.QueryForm(key="user_id", operator="==", value=user_id),
@@ -263,7 +263,7 @@ async def create_user_device(
     if db_user_has_device:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="User device already exists",
+            detail="User device already exists.",
         )
     form_data.creator_id = current_user.id
     db_user_has_device = crud.create(db, tables.UserHasDevice, form_data)
@@ -281,7 +281,7 @@ async def delete_user_device(
     if user_id != form_data.user_id:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="User id mismatch",
+            detail="User id mismatch.",
         )
     db_user_has_devices = crud.selects(db, tables.UserHasDevice, [
         schemas.QueryForm(key="user_id", operator="==", value=user_id),
@@ -290,15 +290,15 @@ async def delete_user_device(
     if not db_user_has_devices:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User device not exists",
+            detail="User device not exists.",
         )
     result = returned(db, tables.UserHasDevice, db_user_has_devices[0], current_user.id)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Device is locked",
+            detail="Device is locked.",
         )
     raise HTTPException(
         status_code=status.HTTP_200_OK,
-        detail="Device returned",
+        detail="Device returned.",
     )

@@ -40,9 +40,9 @@ async def get_brand(
     if not brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Brand not exists",
+            detail="Brand not exists.",
         )
-    brand.creator = crud.select_id(db, tables.User, brand.creator_id)
+    brand.creator = crud.select_creator(db, tables.User, brand.creator_id)
     return brand
 
 
@@ -70,7 +70,7 @@ async def update_brand(
     if not db_brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Brand not exists",
+            detail="Brand not exists.",
         )
     db_brand = crud.update(db, tables.Brand, brand_id, form_data)
     return db_brand
@@ -87,7 +87,7 @@ async def delete_brand(
     if not db_brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Brand not exists",
+            detail="Brand not exists.",
         )
     devices = get_devices(db, brand_id)
     if devices:
