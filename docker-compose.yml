@@ -4,7 +4,8 @@ services:
     container_name: cela-app
     restart: always
     environment:
-      - CELA_DATABASE_URL=mysql+pymysql://cela:password@database:3306/cela
+      # Keep same credentials as in database.
+      - CELA_DATABASE_URL=mysql+pymysql://cela:password@database/cela
     volumes:
       - cela_app_config:/service/app/config
     ports:
@@ -19,6 +20,7 @@ services:
     command: --character-set-server=utf8mb4
     environment:
       - MYSQL_ROOT_PASSWORD=password
+      # Keep same credentials as in app.
       - MYSQL_USER=cela
       - MYSQL_PASSWORD=password
       - MYSQL_DATABASE=cela
