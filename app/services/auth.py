@@ -2,8 +2,9 @@ from datetime import timedelta, datetime, timezone
 from typing import Union
 
 from jose import jwt
+from sqlalchemy import select
 
-from ..database import schemas, crud, tables
+from ..database import schemas, tables
 from ..utils import crypt
 from ..utils.config import get_jwt_config
 
@@ -30,7 +31,12 @@ def authenticate(
         username: str,
         password: str,
 ) -> Union[schemas.User, bool]:
-    user = crud.select_username(db, tables.User, username)
+    stmt = (
+        select(tables.User)
+        .where(tables.User.deleted_at.is_(None))
+        .where(tables.User.username.__eq__(username))
+    )
+    user = db.scalars(stmt).one_or_none()
     if not user:
         return False
     if not crypt.verify_hashed_password(password, user.hashed_password):
@@ -40,31 +46,47 @@ def authenticate(
 
 def create_super_admin(db, form_data: schemas.UserCreateForm):
     try:
-        role = crud.select_name(db, tables.Role, "superuser")
+        stmt = (
+            select(tables.Role)
+            .where(tables.Role.name.__eq__("superuser"))
+        )
+        role = db.scalars(stmt).one_or_none()
         if not role:
             print("Creating a superuser role.")
             role_create = schemas.RoleCreateForm(
                 name="superuser",
                 scopes=["su"]
             )
-            role = crud.create(db, tables.Role, role_create)
+            role = tables.Role(**role_create.dict())
+            db.add(role)
+            db.commit()
             print("Superuser role created successfully.")
         else:
             print("Superuser role already exists.")
-        user = crud.create_user(db, tables.User, form_data)
-        if not user:
-            print("Error creating super user.")
-            return
 
-        form_data = schemas.UserHasRoleCreateForm(
-            user_id=user.id,
-            role_id=role.id,
+        stmt = (
+            select(tables.User)
+            .where(tables.User.username.__eq__(form_data.username))
         )
-        user_has_role = crud.create(db, tables.UserHasRole, form_data)
-        if user_has_role:
-            print("User has superuser role.")
+        user = db.scalars(stmt).one_or_none()
+        if not user:
+            form_data.hashed_password = crypt.hash_password(form_data.password)
+            del form_data.password
+            form_data.creator_id = form_data.creator_id
+            user = tables.User(**form_data.dict())
+            db.add(user)
+            db.commit()
+        else:
+            print("User already exists.")
+        if role in user.roles:
+            print("User already has superuser role.")
+        else:
+            user.roles.append(role)
+            db.commit()
+            print("Superuser role added to user.")
 
         print("Super admin created successfully.")
+        return user
     except Exception as e:
         print("Error creating super admin.")
         raise e

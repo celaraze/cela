@@ -3,10 +3,11 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database.database import engine
-from .database import schemas, crud, tables
+from .database import schemas, tables
 
 from .services.auth import decode_access_token
 
@@ -82,7 +83,13 @@ async def get_current_user(
         token_data = schemas.AuthTokenData(user_id=user_id, scopes=token_scopes)
     except Exception:
         raise credentials_exception
-    user = crud.select_id(db, tables.User, token_data.user_id)
+
+    stmt = (
+        select(tables.User)
+        .where(tables.User.deleted_at.is_(None))
+        .where(tables.User.id.__eq__(token_data.user_id))
+    )
+    user = db.scalars(stmt).one_or_none()
 
     if user is None:
         raise credentials_exception

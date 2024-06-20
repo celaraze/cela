@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Security
+from sqlalchemy import select
 
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
-from ..database import schemas, crud, tables
-from ..utils import crypt
-from ..services.user import get_roles, get_devices
+from ..database import schemas, tables
+from ..utils import crypt, common
 from ..services.device import returned
 
 oauth2_scheme = get_oauth_scheme()
@@ -26,7 +26,13 @@ async def get_users(
         limit: int = 100,
         current_user: schemas.User = Security(get_current_user, scopes=["user:list"]),
 ):
-    users = crud.select_all(db, tables.User, skip=skip, limit=limit)
+    stmt = (
+        select(tables.User)
+        .where(tables.User.deleted_at.isnot(None))
+        .offset(skip)
+        .limit(limit)
+    )
+    users = db.scalars(stmt).all()
     return users
 
 
@@ -37,15 +43,19 @@ async def get_user(
         user_id: int = None,
         current_user: schemas.User = Security(get_current_user, scopes=["user:info"]),
 ):
-    user = crud.select_id(db, tables.User, user_id)
+    stmt = (
+        select(tables.User)
+        .where(tables.User.deleted_at.isnot(None))
+        .where(tables.User.id.__eq__(user_id))
+    )
+    user = db.scalars(stmt).one_or_none()
+    user.roles = user.roles
+    user.devices = user.devices
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not exists.",
         )
-    user.creator = crud.select_creator(db, tables.User, user.creator_id)
-    user.roles = get_roles(db, user.id)
-    user.devices = get_devices(db, user.id)
     return user
 
 
@@ -61,21 +71,34 @@ async def create_user(
             status_code=status.HTTP_409_CONFLICT,
             detail="Username name 'admin' is reserved.",
         )
-    db_user = crud.select_email(db, tables.User, form_data.email)
+    # The email is always unique, so we don't need to filter soft deleted records.
+    stmt = (
+        select(tables.User)
+        .where(tables.User.email.__eq__(form_data.email))
+    )
+    db_user = db.scalars(stmt).one_or_none()
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Email already exists.",
         )
-    db_user = crud.select_username(db, tables.User, form_data.username)
+    # The username is always unique, so we don't need to filter soft deleted records.
+    stmt = (
+        select(tables.User)
+        .where(tables.User.username.__eq__(form_data.username))
+    )
+    db_user = db.scalars(stmt).one_or_none()
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Username already exists.",
         )
     form_data.creator_id = current_user.id
-    db_user = crud.create_user(db, tables.User, form_data)
-    return db_user
+    form_data.hashed_password = crypt.hash_password(form_data.password)
+    form_data.pop("password")
+    user = tables.User(**form_data.dict())
+    db.add(user)
+    return user
 
 
 # Update user.
@@ -86,13 +109,18 @@ async def update_user(
         form_data: list[schemas.UpdateForm],
         current_user: schemas.User = Security(get_current_user, scopes=["user:update"]),
 ):
-    db_user = crud.select_id(db, tables.User, user_id)
+    stmt = (
+        select(tables.User)
+        .where(tables.User.deleted_at.isnot(None))
+        .where(tables.User.id.__eq__(user_id))
+    )
+    db_user = db.scalars(stmt).one_or_none()
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not exists.",
         )
-    for i, form in enumerate(form_data):
+    for form in form_data:
         if form.key not in ["username", "name", "email", "password"]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -101,13 +129,13 @@ async def update_user(
         if form.key == "password":
             form.key = "hashed_password"
             form.value = crypt.hash_password(form.value)
-            form_data[i] = form
         if (form.key == "username") and (form.value == "admin"):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Username name 'admin' is reserved.",
             )
-    db_user = crud.update(db, tables.User, db_user.id, form_data)
+        setattr(db_user, form.key, form.value)
+    db.commit()
     return db_user
 
 
@@ -118,37 +146,51 @@ async def delete_user(
         user_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["user:delete"]),
 ):
-    db_user = crud.select_id(db, tables.User, user_id)
-    if not db_user:
+    stmt = (
+        select(tables.User)
+        .where(tables.User.deleted_at.isnot(None))
+        .where(tables.User.id.__eq__(user_id))
+    )
+    user = db.scalars(stmt).one_or_none()
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not exists.",
         )
-    if db_user.username == "admin":
+    if user.username == "admin":
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Username name 'admin' is reserved.",
         )
     # Delete user has roles and user has devices.
-    conditions = [schemas.QueryForm(key="user_id", operator="==", value=user_id)]
-    crud.delete_conditions(db, tables.UserHasRole, conditions)
-    crud.delete_conditions(db, tables.UserHasDevice, conditions)
-    db_user = crud.delete(db, tables.User, user_id)
-    return db_user
+    for role in user.roles:
+        stmt = (
+            select(tables.user_has_roles_table)
+            .where(tables.user_has_roles_table.c.user_id.__eq__(user_id))
+            .where(tables.user_has_roles_table.c.role_id.__eq__(role.id))
+        )
+        user_has_role = db.scalars(stmt).one_or_none()
+        if user_has_role:
+            setattr(user_has_role, "deleted_at", common.now())
+        db.commit()
+
+    for device in user.devices:
+        stmt = (
+            select(tables.user_has_devices_table)
+            .where(tables.user_has_devices_table.c.user_id.__eq__(user_id))
+            .where(tables.user_has_devices_table.c.device_id.__eq__(device.id))
+        )
+        user_has_device = db.scalars(stmt).one_or_none()
+        if user_has_device:
+            setattr(user_has_device, "deleted_at", common.now())
+        db.commit()
+
+    setattr(user, "deleted_at", common.now())
+    db.commit()
+    return user
 
 
 # API for user has role.
-
-# Get all user's roles.
-@router.get("/{user_id}/roles", response_model=list[schemas.Role])
-async def get_user_roles(
-        db: databaseSession,
-        user_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:list"]),
-):
-    roles = get_roles(db, user_id)
-    return roles
-
 
 # Create user's role.
 @router.post("/{user_id}/roles", response_model=schemas.UserHasRole)
@@ -163,29 +205,42 @@ async def create_user_role(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="User id mismatch.",
         )
-    db_user = crud.select_id(db, tables.User, user_id)
-    if not db_user:
+    stmt = (
+        select(tables.User)
+        .where(tables.User.deleted_at.isnot(None))
+        .where(tables.User.id.__eq__(user_id))
+    )
+    user = db.scalars(stmt).one_or_none()
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not exists.",
         )
-    db_role = crud.select_id(db, tables.Role, form_data.role_id)
-    if not db_role:
+    stmt = (
+        select(tables.Role)
+        .where(tables.Role.deleted_at.isnot(None))
+        .where(tables.Role.id.__eq__(form_data.role_id))
+    )
+    role = db.scalars(stmt).one_or_none()
+    if not role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Role not exists.",
         )
-    db_user_has_role = crud.selects(db, tables.UserHasRole, [
-        schemas.QueryForm(key="user_id", operator="==", value=user_id),
-        schemas.QueryForm(key="role_id", operator="==", value=form_data.role_id),
-    ])
-    if db_user_has_role:
+
+    if role in user.roles:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="User role already exists.",
+            detail="User already has this role.",
         )
-    db_user_has_role = crud.create(db, tables.UserHasRole, form_data)
-    return db_user_has_role
+
+    user.roles.append(role)
+    db.commit()
+
+    raise HTTPException(
+        status_code=status.HTTP_200_OK,
+        detail="Create user has role successfully.",
+    )
 
 
 # Delete user's role.
@@ -196,40 +251,36 @@ async def delete_user_role(
         role_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:delete"]),
 ):
-    db_user_has_role = crud.selects(db, tables.UserHasRole, [
-        schemas.QueryForm(key="user_id", operator="==", value=user_id),
-        schemas.QueryForm(key="role_id", operator="==", value=role_id),
-    ])
-    if not db_user_has_role:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User role not exists.",
-        )
-    db_user = crud.select_id(db, tables.User, user_id)
-    db_role = crud.select_id(db, tables.Role, role_id)
-    if (db_user and (db_user.username == "admin")) and (db_role and (db_role.name == "superuser")):
+    stmt = (
+        select(tables.User)
+        .where(tables.User.deleted_at.isnot(None))
+        .where(tables.User.id.__eq__(user_id))
+    )
+    user = db.scalars(stmt).one_or_none()
+
+    stmt = (
+        select(tables.Role)
+        .where(tables.Role.deleted_at.isnot(None))
+        .where(tables.Role.id.__eq__(role_id))
+    )
+    role = db.scalars(stmt).one_or_none()
+
+    if (user and (user.username == "admin")) and (role and (role.name == "superuser")):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Superuser role cannot be deleted from admin user.",
         )
-    return crud.delete_conditions(db, tables.UserHasRole, [
-        schemas.QueryForm(key="user_id", operator="==", value=user_id),
-        schemas.QueryForm(key="role_id", operator="==", value=role_id),
-    ])
+
+    user.roles.remove(role)
+    db.commit()
+
+    raise HTTPException(
+        status_code=status.HTTP_200_OK,
+        detail="Delete user has role successfully.",
+    )
 
 
 # API for user has device.
-
-# Get all user's devices.
-@router.get("/{user_id}/devices", response_model=list[schemas.Device])
-async def get_user_devices(
-        db: databaseSession,
-        user_id: int,
-        current_user: schemas.User = Security(get_current_user, scopes=["user_has_device:list"]),
-):
-    devices = get_devices(db, user_id)
-    return devices
-
 
 # Create user's device.
 @router.post("/{user_id}/devices/out", response_model=schemas.UserHasDevice)
@@ -244,30 +295,44 @@ async def create_user_device(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="User id mismatch.",
         )
-    db_user = crud.select_id(db, tables.User, user_id)
-    if not db_user:
+
+    stmt = (
+        select(tables.User)
+        .where(tables.User.deleted_at.isnot(None))
+        .where(tables.User.id.__eq__(user_id))
+    )
+    user = db.scalars(stmt).one_or_none()
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not exists.",
         )
-    db_device = crud.select_id(db, tables.Device, form_data.device_id)
-    if not db_device:
+
+    stmt = (
+        select(tables.Device)
+        .where(tables.Device.deleted_at.isnot(None))
+        .where(tables.Device.id.__eq__(form_data.device_id))
+    )
+    device = db.scalars(stmt).one_or_none()
+    if not device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device not exists.",
         )
-    db_user_has_device = crud.selects(db, tables.UserHasDevice, [
-        schemas.QueryForm(key="user_id", operator="==", value=user_id),
-        schemas.QueryForm(key="device_id", operator="==", value=form_data.device_id),
-    ])
-    if db_user_has_device:
+
+    if device in user.devices:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User device already exists.",
         )
-    form_data.creator_id = current_user.id
-    db_user_has_device = crud.create(db, tables.UserHasDevice, form_data)
-    return db_user_has_device
+
+    user.devices.append(device)
+    db.commit()
+
+    raise HTTPException(
+        status_code=status.HTTP_200_OK,
+        detail="Create user has device successfully.",
+    )
 
 
 # Return user's device.
@@ -283,16 +348,38 @@ async def delete_user_device(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="User id mismatch.",
         )
-    db_user_has_devices = crud.selects(db, tables.UserHasDevice, [
-        schemas.QueryForm(key="user_id", operator="==", value=user_id),
-        schemas.QueryForm(key="device_id", operator="==", value=form_data.device_id),
-    ])
-    if not db_user_has_devices:
+
+    stmt = (
+        select(tables.User)
+        .where(tables.User.deleted_at.isnot(None))
+        .where(tables.User.id.__eq__(user_id))
+    )
+    user = db.scalars(stmt).one_or_none()
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not exists.",
+        )
+
+    stmt = (
+        select(tables.Device)
+        .where(tables.Device.deleted_at.isnot(None))
+        .where(tables.Device.id.__eq__(form_data.device_id))
+    )
+    device = db.scalars(stmt).one_or_none()
+    if not device:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Device not exists.",
+        )
+
+    if device not in user.devices:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
             detail="User device not exists.",
         )
-    result = returned(db, tables.UserHasDevice, db_user_has_devices[0], current_user.id)
+
+    result = returned(db, user, device, current_user.id)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,

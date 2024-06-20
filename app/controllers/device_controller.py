@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Security
 
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
-from ..database import schemas, crud, tables
+from ..database import schemas, tables
 from ..services.device import get_user
+from ..utils import common
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -25,9 +26,15 @@ async def get_devices(
         asset_number: str = None,
         current_user: schemas.User = Security(get_current_user, scopes=["device:list"]),
 ):
-    devices = crud.select_all(db, tables.Device, skip=skip, limit=limit)
+    db_query = (
+        db.query(tables.Device)
+        .filter(tables.Device.deleted_at.isnot(None))
+        .offset(skip)
+        .limit(limit)
+    )
     if asset_number:
-        devices = [crud.select_asset_number(db, tables.Device, asset_number)]
+        db_query = db_query.filter(tables.Device.asset_number == asset_number)
+    devices = db_query.all()
     return devices
 
 
@@ -38,13 +45,22 @@ async def get_device(
         device_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["device:info"]),
 ):
-    device = crud.select_id(db, tables.Device, device_id)
+    device = (
+        db.query(tables.Device)
+        .filter(tables.Device.deleted_at.isnot(None))
+        .filter(tables.Device.id == device_id)
+        .first()
+    )
     if not device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device not exists.",
         )
-    device.creator = crud.select_creator(db, tables.User, device.creator_id)
+    device.creator = (
+        db.query(tables.User)
+        .filter(tables.User.id == device.creator_id)
+        .first()
+    )
     user = get_user(db, device_id)
     device.user = user
     return device
@@ -57,27 +73,45 @@ async def create_device(
         form_data: schemas.DeviceCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["device:create"]),
 ):
-    db_device = crud.select_asset_number(db, tables.Device, form_data.asset_number)
+    # The asset number is always unique, so we don't need to filter soft deleted records.
+    db_device = (
+        db.query(tables.Device)
+        .filter(tables.Device.asset_number == form_data.asset_number)
+        .first()
+    )
     if db_device:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Device asset number already exists.",
         )
-    db_brand = crud.select_id(db, tables.Brand, form_data.brand_id)
+    db_brand = (
+        db.query(tables.Brand)
+        .filter(tables.Brand.deleted_at.isnot(None))
+        .filter(tables.Brand.id == form_data.brand_id)
+        .first()
+    )
     if not db_brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Brand not exists.",
         )
-    db_device_category = crud.select_id(db, tables.DeviceCategory, form_data.category_id)
+    db_device_category = (
+        db.query(tables.DeviceCategory)
+        .filter(tables.DeviceCategory.deleted_at.isnot(None))
+        .filter(tables.DeviceCategory.id == form_data.category_id)
+        .first()
+    )
     if not db_device_category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device category not exists.",
         )
     form_data.creator_id = current_user.id
-    db_device = crud.create(db, tables.Device, form_data)
-    return db_device
+    device = tables.Device(**form_data.dict())
+    db.add(device)
+    db.commit()
+    db.refresh(device)
+    return device
 
 
 # Update device.
@@ -88,7 +122,12 @@ async def update_device(
         form_data: list[schemas.UpdateForm],
         current_user: schemas.User = Security(get_current_user, scopes=["device:update"]),
 ):
-    db_device = crud.select_id(db, tables.Device, device_id)
+    db_device = (
+        db.query(tables.Device)
+        .filter(tables.Device.deleted_at.isnot(None))
+        .filter(tables.Device.id == device_id)
+        .first()
+    )
     if not db_device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -96,14 +135,24 @@ async def update_device(
         )
     for form in form_data:
         if form.key == "brand_id":
-            db_brand = crud.select_id(db, tables.Brand, form.value)
+            db_brand = (
+                db.query(tables.Brand)
+                .filter(tables.Brand.deleted_at.isnot(None))
+                .filter(tables.Brand.id == form.value)
+                .first()
+            )
             if not db_brand:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Brand not exists.",
                 )
         elif form.key == "category_id":
-            db_device_category = crud.select_id(db, tables.DeviceCategory, form.value)
+            db_device_category = (
+                db.query(tables.DeviceCategory)
+                .filter(tables.DeviceCategory.deleted_at.isnot(None))
+                .filter(tables.DeviceCategory.id == form.value)
+                .first()
+            )
             if not db_device_category:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -116,7 +165,10 @@ async def update_device(
             )
         else:
             continue
-    db_device = crud.update(db, tables.Device, device_id, form_data)
+    for form in form_data:
+        setattr(db_device, form.key, form.value)
+    db.commit()
+    db.refresh(db_device)
     return db_device
 
 
@@ -127,7 +179,12 @@ async def delete_device(
         device_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["device:delete"]),
 ):
-    db_device = crud.select_id(db, tables.Device, device_id)
+    db_device = (
+        db.query(tables.Device)
+        .filter(tables.Device.deleted_at.isnot(None))
+        .filter(tables.Device.id == device_id)
+        .first()
+    )
     if not db_device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -139,5 +196,7 @@ async def delete_device(
             status_code=status.HTTP_409_CONFLICT,
             detail="Device has users, please update them first.",
         )
-    db_device = crud.delete(db, tables.Device, device_id)
+    setattr(db_device, "deleted_at", common.now())
+    db.commit()
+    db.refresh(db_device)
     return db_device

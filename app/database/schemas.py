@@ -41,7 +41,8 @@ class UserCreateForm(BaseSchema):
     username: str
     email: str
     name: str
-    password: str
+    password: Union[str, None] = None
+    hashed_password: Union[str, None] = None
     creator_id: int = 0
     created_at: str = common.now()
 
@@ -191,6 +192,17 @@ class DeviceCategory(BaseSchema):
         from_attributes = True
 
 
+class UserForDevice(BaseSchema):
+    id: int
+    username: str
+    email: str
+    name: str
+    is_active: bool = True
+
+    class Config:
+        from_attributes = True
+
+
 class Device(BaseSchema):
     id: int
     hostname: str
@@ -199,13 +211,13 @@ class Device(BaseSchema):
     ipv6_address: Union[str, None]
     mac_address: Union[str, None]
     description: Union[str, None]
-    brand: Union[Brand, None] = None
-    category: Union[DeviceCategory, None] = None
-    creator_id: int
     created_at: Union[datetime, None]
     deleted_at: Union[datetime, None]
-    user: Union[Any, None] = None
     creator: Union[Creator, None] = None
+
+    brand: Union[Brand, None] = None
+    category: Union[DeviceCategory, None] = None
+    users: list[Union[UserForDevice, None]] = []
 
     class Config:
         from_attributes = True

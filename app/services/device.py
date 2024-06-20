@@ -1,45 +1,41 @@
-from app.database import crud, schemas, tables
+from sqlalchemy import select
+from sqlalchemy.orm import make_transient
+
+from app.database import schemas, tables
 from app.utils import common
-
-
-def get_user_has_device(db, device_id: int):
-    conditions = [
-        schemas.QueryForm(key="device_id", operator="==", value=device_id),
-        schemas.QueryForm(key="status", operator="==", value=0),
-    ]
-    user_has_devices = crud.selects(db, tables.UserHasDevice, conditions)
-    if not user_has_devices:
-        return None
-    return user_has_devices[0]
-
-
-def get_user(db, device_id):
-    user_has_device = get_user_has_device(db, device_id)
-    if not user_has_device:
-        return None
-    if user_has_device.flag == -1:
-        return None
-    user = crud.select_id(db, tables.User, user_has_device.user_id)
-    if not user:
-        return None
-    return user
 
 
 def returned(
         db,
-        table,
-        old_db_record,
+        user,
+        device,
         creator_id,
 ):
-    new_db_record = crud.copy(db, table, old_db_record)
-    if new_db_record:
+    stmt = (
+        select(tables.user_has_devices_table)
+        .where(tables.user_has_devices_table.deleted_at.isnot(None))
+        .where(tables.user_has_devices_table.user_id.__eq__(user.id))
+        .where(tables.user_has_devices_table.device_id.__eq__(device.id))
+    )
+    old_user_has_device = db.scalars(stmt).one_or_none()
+
+    old_user_has_device.pop('_sa_instance_state', None)
+
+    new_user_has_device = tables.user_has_devices_table(**old_user_has_device)
+    make_transient(new_user_has_device)
+    new_user_has_device.id = None
+    db.add(new_user_has_device)
+    db.commit()
+    if new_user_has_device:
         update_form = [
             schemas.UpdateForm(key="flag", value=-1),
             schemas.UpdateForm(key="status", value=1),
             schemas.UpdateForm(key="creator_id", value=creator_id),
             schemas.UpdateForm(key="created_at", value=common.now()),
         ]
-        crud.update(db, table, new_db_record.id, update_form)
-        crud.update(db, table, old_db_record.id, update_form)
+        for form in update_form:
+            setattr(old_user_has_device, form.key, form.value)
+            setattr(new_user_has_device, form.key, form.value)
+        db.commit()
         return True
     return False
