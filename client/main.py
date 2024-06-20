@@ -2,7 +2,8 @@ import argparse
 
 from rich import print
 import httpx
-from .services import config, auth, role, brand, device_category, device
+
+from .services import config, auth, role, brand, device_category, device, user
 
 
 def connect(server_url: str):
@@ -19,7 +20,7 @@ def login(username: str, password: str):
     print("Logging in...")
     response = auth.login(config.read_server_url(), username, password)
     if response.status_code != 200:
-        print("Failed to login.")
+        print(response.json()["detail"] or None, response.status_code)
         return
     access_token = response.json()["access_token"]
     config.write({"access_token": access_token})
@@ -139,14 +140,14 @@ def main():
 
     # cela device create <name>
     device_create_subparser = device_action_subparsers.add_parser('create')
-    device_create_subparser.add_argument('--hostname', type=str, help='Name of the device.')
-    device_create_subparser.add_argument('--asset-number', type=str, help='Name of the device.')
-    device_create_subparser.add_argument('--ipv4-address', type=str, help='Name of the device.')
-    device_create_subparser.add_argument('--ipv6-address', type=str, help='Name of the device.')
-    device_create_subparser.add_argument('--mac-address', type=str, help='Name of the device.')
-    device_create_subparser.add_argument('--description', type=str, help='Name of the device.')
-    device_create_subparser.add_argument('--brand-id', type=str, help='Name of the device.')
-    device_create_subparser.add_argument('--category-id', type=str, help='Name of the device.')
+    device_create_subparser.add_argument('--hostname', type=str, help='Hostname of the device.')
+    device_create_subparser.add_argument('--asset-number', type=str, help='Asset number of the device.')
+    device_create_subparser.add_argument('--ipv4-address', type=str, help='IPv4 address of the device.')
+    device_create_subparser.add_argument('--ipv6-address', type=str, help='IPv4 address of the device.')
+    device_create_subparser.add_argument('--mac-address', type=str, help='MAC address of the device.')
+    device_create_subparser.add_argument('--description', type=str, help='Description of the device.')
+    device_create_subparser.add_argument('--brand-id', type=str, help='Brand ID of the device.')
+    device_create_subparser.add_argument('--category-id', type=str, help='Category ID of the device.')
 
     # cela device update <device_id> <key> <value>
     device_update_subparser = device_action_subparsers.add_parser('update')
@@ -155,8 +156,37 @@ def main():
     device_update_subparser.add_argument('value', type=str, help='Value of the device.')
 
     # cela device delete <device_id>
-    brand_delete_subparser = device_action_subparsers.add_parser('delete')
-    brand_delete_subparser.add_argument('device_id', type=int, help='ID of the device.')
+    device_delete_subparser = device_action_subparsers.add_parser('delete')
+    device_delete_subparser.add_argument('device_id', type=int, help='ID of the device.')
+
+    # cela user <action>
+    user_parser = subparsers.add_parser('user')
+    user_action_subparsers = user_parser.add_subparsers(dest='action', required=True)
+
+    # cela user list
+    device_list_subparser = user_action_subparsers.add_parser('list')
+
+    # cela user info
+    user_info_subparser = user_action_subparsers.add_parser('info')
+    # cela user info <user_id>
+    user_info_subparser.add_argument('user_id', type=int, help='ID of the user.')
+
+    # cela user create <name>
+    user_create_subparser = user_action_subparsers.add_parser('create')
+    user_create_subparser.add_argument('--name', type=str, help='Name of the device.')
+    user_create_subparser.add_argument('--username', type=str, help='Username of the user.')
+    user_create_subparser.add_argument('--email', type=str, help='E-mail of the user.')
+    user_create_subparser.add_argument('--password', type=str, help='Password of the user.')
+
+    # cela user update <user_id> <key> <value>
+    user_update_subparser = user_action_subparsers.add_parser('update')
+    user_update_subparser.add_argument('user_id', type=int, help='ID of the user.')
+    user_update_subparser.add_argument('key', type=str, help='Key of the user.')
+    user_update_subparser.add_argument('value', type=str, help='Value of the user.')
+
+    # cela user delete <user_id>
+    user_delete_subparser = user_action_subparsers.add_parser('delete')
+    user_delete_subparser.add_argument('user_id', type=int, help='ID of the user.')
 
     args = parser.parse_args()
 
@@ -174,6 +204,8 @@ def main():
         device_category.switch(args)
     elif args.command == 'device':
         device.switch(args)
+    elif args.command == 'user':
+        user.switch(args)
     else:
         print("Invalid command. Please follow the usage below.")
         print("Usage: cela <command>")

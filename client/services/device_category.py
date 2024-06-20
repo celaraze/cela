@@ -27,8 +27,10 @@ def select_device_categories():
     if response.status_code != 200:
         console.print("Failed to get device categories.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
+
+    console.print("Device Categories", response.status_code, style="bold green")
 
     device_categories = response.json()
 
@@ -42,7 +44,6 @@ def select_device_categories():
             device_category["name"],
         )
 
-    console.print("Device Categories", response.status_code, style="bold green")
     console.print(table)
 
 
@@ -54,12 +55,12 @@ def select_device_category(device_category_id: int):
     if response.status_code != 200:
         console.print("Failed to get device_category.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
-
-    device_category = response.json()
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
     console.print("Device Category", response.status_code, style="bold green")
+
+    device_category = response.json()
 
     if device_category:
         table = Table(show_header=True, header_style="bold magenta")
@@ -86,10 +87,11 @@ def create_device_category(name: str):
     if response.status_code != 200:
         console.print("Failed to create device category.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
-    console.print("Device category created successfully.", style="bold green")
+    console.print("Device Category Create", response.status_code, style="bold green")
+
     console.print(f"The new device category id: {response.json()['id']}")
 
 
@@ -110,10 +112,10 @@ def update_device_category(device_category_id: int, key: str, value: str):
     if response.status_code != 200:
         console.print("Failed to update device category.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
-    console.print("Device category updated successfully.", style="bold green")
+    console.print("Device Category Update", response.status_code, style="bold green")
 
 
 def delete_device_category(device_category_id: int):
@@ -125,7 +127,7 @@ def delete_device_category(device_category_id: int):
     if response.status_code != 200:
         console.print("Failed to delete device category.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
-    console.print("Device category deleted successfully.", style="bold green")
+    console.print("Device Category Delete", response.status_code, style="bold green")

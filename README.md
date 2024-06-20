@@ -30,7 +30,13 @@ And then you need to `GET` [http://localhost:8000/auth/init](http://localhost:80
 
 Now you can visit [http://localhost:8000/docs](http://localhost:8000/docs) to view the API documentation.
 
-Tips: The image cannot be used now, because it still needs to be developed.
+Or running `pip install cela` to install the command-line client, and then you can use the command-line client:
+
+```shell
+cela connect http://localhost:8000
+cela login admin admin
+cela device list
+```
 
 ## Directory Structure
 

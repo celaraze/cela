@@ -27,8 +27,10 @@ def select_roles():
     if response.status_code != 200:
         console.print("Failed to get roles.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
+
+    console.print("Roles", response.status_code, style="bold green")
 
     roles = response.json()
 
@@ -44,7 +46,6 @@ def select_roles():
             ", ".join(role["scopes"]),
         )
 
-    console.print("Roles", response.status_code, style="bold green")
     console.print(table)
 
 
@@ -56,12 +57,12 @@ def select_role(role_id: int):
     if response.status_code != 200:
         console.print("Failed to get role.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
-
-    role = response.json()
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
     console.print("Role", response.status_code, style="bold green")
+
+    role = response.json()
 
     if role:
         table = Table(show_header=True, header_style="bold magenta")
@@ -90,10 +91,11 @@ def create_role(name: str, scopes: str):
     if response.status_code != 200:
         console.print("Failed to create role.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
-    console.print("Role created successfully.", style="bold green")
+    console.print("Role Create", response.status_code, style="bold green")
+
     console.print(f"The new role id: {response.json()['id']}")
 
 
@@ -114,10 +116,10 @@ def update_role(role_id: int, key: str, value: str):
     if response.status_code != 200:
         console.print("Failed to update role.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
-    console.print("Role updated successfully.", style="bold green")
+    console.print("Role Update", response.status_code, style="bold green")
 
 
 def delete_role(role_id: int):
@@ -129,7 +131,7 @@ def delete_role(role_id: int):
     if response.status_code != 200:
         console.print("Failed to delete role.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
-    console.print("Role deleted successfully.", style="bold green")
+    console.print("Role Delete", response.status_code, style="bold green")

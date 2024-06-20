@@ -27,8 +27,10 @@ def select_brands():
     if response.status_code != 200:
         console.print("Failed to get brands.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
+
+    console.print("Brands", response.status_code, style="bold green")
 
     brands = response.json()
 
@@ -42,7 +44,6 @@ def select_brands():
             brand["name"],
         )
 
-    console.print("Brands", response.status_code, style="bold green")
     console.print(table)
 
 
@@ -54,12 +55,12 @@ def select_brand(brand_id: int):
     if response.status_code != 200:
         console.print("Failed to get brand.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
-
-    brand = response.json()
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
     console.print("Role", response.status_code, style="bold green")
+
+    brand = response.json()
 
     if brand:
         table = Table(show_header=True, header_style="bold magenta")
@@ -86,10 +87,11 @@ def create_brand(name: str):
     if response.status_code != 200:
         console.print("Failed to create brand.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
-    console.print("Brand created successfully.", style="bold green")
+    console.print("Brand Create", response.status_code, style="bold green")
+
     console.print(f"The new brand id: {response.json()['id']}")
 
 
@@ -110,10 +112,10 @@ def update_brand(brand_id: int, key: str, value: str):
     if response.status_code != 200:
         console.print("Failed to update brand.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
-    console.print("Brand updated successfully.", style="bold green")
+    console.print("Brand Update", response.status_code, style="bold green")
 
 
 def delete_brand(brand_id: int):
@@ -125,7 +127,7 @@ def delete_brand(brand_id: int):
     if response.status_code != 200:
         console.print("Failed to delete brand.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
-    console.print("Brand deleted successfully.", style="bold green")
+    console.print("Brand Delete", response.status_code, style="bold green")

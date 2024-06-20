@@ -27,22 +27,29 @@ def select_devices():
     if response.status_code != 200:
         console.print("Failed to get devices.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
+
+    console.print("Devices", response.status_code, style="bold green")
 
     devices = response.json()
 
     table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("ID", style="dim", width=12)
-    table.add_column("Name")
+    table.add_column("ID", style="dim", width=12, justify="center")
+    table.add_column("Hostname", justify="center")
+    table.add_column("Asset Number", justify="center")
+    table.add_column("IPv4 Address", justify="center")
+    table.add_column("MAC Address", justify="center")
 
     for device in devices:
         table.add_row(
             str(device["id"]),
-            device["name"],
+            device["hostname"],
+            device["asset_number"],
+            device["ipv4_address"],
+            device["mac_address"],
         )
 
-    console.print("Devices", response.status_code, style="bold green")
     console.print(table)
 
 
@@ -54,17 +61,17 @@ def select_device(device_id: int):
     if response.status_code != 200:
         console.print("Failed to get device.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
+
+    console.print("Device", response.status_code, style="bold green")
 
     device = response.json()
-
-    console.print("Role", response.status_code, style="bold green")
 
     if device:
         table = Table(show_header=True, header_style="bold magenta")
         table.add_column("Fields")
-        table.add_column("Values")
+        table.add_column("Values", justify="right")
         table.add_row("ID", str(device['id']))
         table.add_row("Hostname", device['hostname'])
         table.add_row("IPv4 Address", device['ipv4_address'])
@@ -74,7 +81,6 @@ def select_device(device_id: int):
         table.add_row("Created At", device['created_at'])
         if device['creator']:
             table.add_row("Creator", f"{device['creator']['name']} ({device['creator']['username']})")
-
         console.print(table)
 
 
@@ -97,10 +103,11 @@ def create_device(args):
     if response.status_code != 200:
         console.print("Failed to create device.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
-    console.print("Device created successfully.", style="bold green")
+    console.print("Device Create", response.status_code, style="bold green")
+
     console.print(f"The new device id: {response.json()['id']}")
 
 
@@ -121,10 +128,10 @@ def update_device(role_id: int, key: str, value: str):
     if response.status_code != 200:
         console.print("Failed to update device.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
-    console.print("Device updated successfully.", style="bold green")
+    console.print("Device Update", response.status_code, style="bold green")
 
 
 def delete_device(role_id: int):
@@ -136,7 +143,7 @@ def delete_device(role_id: int):
     if response.status_code != 200:
         console.print("Failed to delete device.", style="bold red")
         console.print(response.status_code)
-        console.print(response.json()['detail'], style="bold")
-        return
+        console.print(response.json()['detail'] or None, style="bold")
+        exit(1)
 
-    console.print("Device deleted successfully.", style="bold green")
+    console.print("Device Delete", response.status_code, style="bold green")
