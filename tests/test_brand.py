@@ -48,6 +48,7 @@ def test_create():
 def test_select():
     response = functions.select_brands(admin_access_token)
     assert response.status_code == 200
+    print(response.json())
 
     response = functions.select_brand(admin_access_token, 0)
     assert response.status_code == 404

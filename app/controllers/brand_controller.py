@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException, status, Security
+from sqlalchemy import select
 
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
 from ..database import schemas, tables
-from ..services.brand import get_devices
 from ..utils import common
+from ..services.brand import get_devices
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -26,13 +27,13 @@ async def get_brands(
         limit: int = 100,
         current_user: schemas.User = Security(get_current_user, scopes=["brand:list"]),
 ):
-    brands = (
-        db.query(tables.Brand)
-        .filter(tables.Brand.deleted_at.isnot(None))
+    stmt = (
+        select(tables.Brand)
+        .where(tables.Brand.deleted_at.is_(None))
         .offset(skip)
         .limit(limit)
-        .all()
     )
+    brands = db.scalars(stmt).all()
     return brands
 
 
@@ -43,23 +44,17 @@ async def get_brand(
         brand_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["brand:info"]),
 ):
-    brand = (
-        db.query(tables.Brand)
-        .filter(tables.Brand.deleted_at.isnot(None))
-        .filter(tables.Brand.id == brand_id)
-        .first()
+    stmt = (
+        select(tables.Brand)
+        .where(tables.Brand.deleted_at.is_(None))
+        .where(tables.Brand.id.__eq__(brand_id))
     )
+    brand = db.scalars(stmt).one_or_none()
     if not brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Brand not exists.",
         )
-    brand.creator = (
-        db.query(tables.User)
-        .filter(tables.User.deleted_at.isnot(None))
-        .filter(tables.User.id == brand.creator_id)
-        .first()
-    )
     return brand
 
 
@@ -74,7 +69,6 @@ async def create_brand(
     brand = tables.Brand(**form_data.dict())
     db.add(brand)
     db.commit()
-    db.refresh(brand)
     return brand
 
 
@@ -86,22 +80,21 @@ async def update_brand(
         form_data: list[schemas.UpdateForm],
         current_user: schemas.User = Security(get_current_user, scopes=["brand:update"]),
 ):
-    db_brand = (
-        db.query(tables.Brand)
-        .filter(tables.Brand.deleted_at.isnot(None))
-        .filter(tables.Brand.id == brand_id)
-        .first()
+    stmt = (
+        select(tables.Brand)
+        .where(tables.Brand.deleted_at.is_(None))
+        .where(tables.Brand.id.__eq__(brand_id))
     )
-    if not db_brand:
+    brand = db.scalars(stmt).one_or_none()
+    if not brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Brand not exists.",
         )
     for form in form_data:
-        setattr(db_brand, form.key, form.value)
+        setattr(brand, form.key, form.value)
     db.commit()
-    db.refresh(db_brand)
-    return db_brand
+    return brand
 
 
 # Delete brand.
@@ -111,24 +104,25 @@ async def delete_brand(
         brand_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["brand:delete"]),
 ):
-    db_brand = (
-        db.query(tables.Brand)
-        .filter(tables.Brand.deleted_at.isnot(None))
-        .filter(tables.Brand.id == brand_id)
-        .first()
+    stmt = (
+        select(tables.Brand)
+        .where(tables.Brand.deleted_at.is_(None))
+        .where(tables.Brand.id.__eq__(brand_id))
     )
-    if not db_brand:
+    brand = db.scalars(stmt).one_or_none()
+    if not brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Brand not exists.",
         )
-    devices = get_devices(db, brand_id)
+
+    devices = get_devices(brand)
+
     if devices:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Brand has devices, please update devices first.",
         )
-    setattr(db_brand, "deleted_at", common.now())
+    setattr(brand, "deleted_at", common.now())
     db.commit()
-    db.refresh(db_brand)
-    return db_brand
+    return brand

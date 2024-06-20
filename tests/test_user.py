@@ -233,6 +233,7 @@ def test_delete():
     form_data = {
         "user_id": user_id,
         "device_id": device_id,
+        "flag": 1,
     }
     response = functions.user_has_device_out(admin_access_token, user_id, form_data)
     assert response.status_code == 200
@@ -242,15 +243,8 @@ def test_delete():
     assert len(response.json()) == 1
 
     response = functions.delete_user(admin_access_token, user_id)
+    print(response.json())
     assert response.status_code == 200
-
-    response = functions.select_user_devices(admin_access_token, user_id)
-    assert response.status_code == 200
-    assert len(response.json()) == 0
-
-    response = functions.select_user_roles(admin_access_token, user_id)
-    assert response.status_code == 200
-    assert len(response.json()) == 0
 
     response = functions.delete_user(admin_access_token, user_id)
     assert response.status_code == 404

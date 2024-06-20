@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException, status, Security
+from sqlalchemy import select
 
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
 from ..database import schemas, tables
-from ..services.device_category import get_devices
 from ..utils import common
+from ..services.device_category import get_devices
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -25,12 +26,13 @@ async def get_device_categories(
         limit: int = 100,
         current_user: schemas.User = Security(get_current_user, scopes=["device_category:list"]),
 ):
-    device_categories = (
-        db.query(tables.DeviceCategory)
-        .filter(tables.DeviceCategory.deleted_at.isnot(None))
-        .offset(skip).limit(limit)
-        .all()
+    stmt = (
+        select(tables.DeviceCategory)
+        .where(tables.DeviceCategory.deleted_at.is_(None))
+        .offset(skip)
+        .limit(limit)
     )
+    device_categories = db.scalars(stmt).all()
     return device_categories
 
 
@@ -41,22 +43,17 @@ async def get_device_category(
         device_category_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["device_category:info"]),
 ):
-    device_category = (
-        db.query(tables.DeviceCategory)
-        .filter(tables.DeviceCategory.deleted_at.isnot(None))
-        .filter(tables.DeviceCategory.id == device_category_id)
-        .first()
+    stmt = (
+        select(tables.DeviceCategory)
+        .where(tables.DeviceCategory.deleted_at.is_(None))
+        .where(tables.DeviceCategory.id.__eq__(device_category_id))
     )
+    device_category = db.scalars(stmt).one_or_none()
     if not device_category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device Category not exists.",
         )
-    device_category.creator = (
-        db.query(tables.User)
-        .filter(tables.User.id == device_category.creator_id)
-        .first()
-    )
     return device_category
 
 
@@ -71,7 +68,6 @@ async def create_device_category(
     device_category = tables.DeviceCategory(**form_data.dict())
     db.add(device_category)
     db.commit()
-    db.refresh(device_category)
     return device_category
 
 
@@ -83,22 +79,21 @@ async def update_device_category(
         form_data: list[schemas.UpdateForm],
         current_user: schemas.User = Security(get_current_user, scopes=["device_category:update"]),
 ):
-    db_device_category = (
-        db.query(tables.DeviceCategory)
-        .filter(tables.DeviceCategory.deleted_at.isnot(None))
-        .filter(tables.DeviceCategory.id == device_category_id)
-        .first()
+    stmt = (
+        select(tables.DeviceCategory)
+        .where(tables.DeviceCategory.deleted_at.is_(None))
+        .where(tables.DeviceCategory.id.__eq__(device_category_id))
     )
-    if not db_device_category:
+    device_category = db.scalars(stmt).one_or_none()
+    if not device_category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device Category not exists.",
         )
     for form in form_data:
-        setattr(db_device_category, form.key, form.value)
+        setattr(device_category, form.key, form.value)
     db.commit()
-    db.refresh(db_device_category)
-    return db_device_category
+    return device_category
 
 
 # Delete device category.
@@ -108,24 +103,25 @@ async def delete_device_category(
         device_category_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["device_category:delete"]),
 ):
-    db_device_category = (
-        db.query(tables.DeviceCategory)
-        .filter(tables.DeviceCategory.deleted_at.isnot(None))
-        .filter(tables.DeviceCategory.id == device_category_id)
-        .first()
+    stmt = (
+        select(tables.DeviceCategory)
+        .where(tables.DeviceCategory.deleted_at.is_(None))
+        .where(tables.DeviceCategory.id.__eq__(device_category_id))
     )
-    if not db_device_category:
+    device_category = db.scalars(stmt).one_or_none()
+    if not device_category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device Category not exists.",
         )
-    devices = get_devices(db, device_category_id)
+
+    devices = get_devices(device_category)
+
     if devices:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Device Category has devices, please update them first.",
         )
-    setattr(db_device_category, "deleted_at", common.now())
+    setattr(device_category, "deleted_at", common.now())
     db.commit()
-    db.refresh(db_device_category)
-    return db_device_category
+    return device_category

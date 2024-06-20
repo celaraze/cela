@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Security
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import select
 
 from ..dependencies import get_current_user, databaseSession
-from ..services import auth
-from ..services.auth import authenticate, create_access_token
+from ..services.auth import authenticate, create_access_token, create_super_admin
+from ..services.user import get_roles
 from ..database import schemas, tables
 from ..utils import crypt
 
@@ -29,7 +30,7 @@ async def init(
     email = "admin@localhost"
     name = "Admin"
     password = "admin"
-    auth.create_super_admin(
+    create_super_admin(
         db,
         schemas.UserCreateForm(
             username=username,
@@ -58,7 +59,7 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     scopes = []
-    roles = user.roles
+    roles = get_roles(user)
     for role in roles:
         scopes.extend(role.scopes)
     access_token = create_access_token(data={"user_id": user.id, "scopes": scopes})
@@ -78,10 +79,22 @@ async def update_me(
         form_data: list[schemas.UpdateForm],
         current_user: schemas.User = Security(get_current_user, scopes=["auth:me"]),
 ):
+    stmt = (
+        select(tables.User)
+        .where(tables.User.deleted_at.is_(None))
+        .where(tables.User.id.__eq__(current_user.id))
+    )
+    user = db.execute(stmt).scalar_one()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not exists.",
+        )
     for form in form_data:
-        setattr(current_user, form.key, form.value)
+        setattr(user, form.key, form.value)
     db.commit()
-    return current_user
+    return user
 
 
 @router.put("/change_password")
@@ -97,9 +110,20 @@ async def change_password(
             detail="Incorrect password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    setattr(current_user, "hashed_password", crypt.hash_password(form_data.new_password))
+    stmt = (
+        select(tables.User)
+        .where(tables.User.deleted_at.is_(None))
+        .where(tables.User.id.__eq__(current_user.id))
+    )
+    user = db.execute(stmt).scalar_one()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not exists.",
+        )
+    setattr(user, "hashed_password", crypt.hash_password(form_data.new_password))
     db.commit()
-    return current_user
+    return user
 
 
 @router.post("/renew")
@@ -108,7 +132,7 @@ async def refresh_scopes(
         current_user: schemas.User = Security(get_current_user, scopes=["auth:me"]),
 ):
     scopes = []
-    roles = current_user.roles
+    roles = get_roles(current_user)
     for role in roles:
         scopes.extend(role.scopes)
     access_token = create_access_token(data={"user_id": current_user.id, "scopes": scopes})

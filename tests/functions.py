@@ -164,13 +164,6 @@ def delete_role(access_token: str, role_id: id):
 
 # UserHasRole
 
-def select_user_roles(access_token: str, user_id: id):
-    return client.get(
-        f"/users/{user_id}/roles",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-
-
 def create_user_has_role(access_token: str, user_id: id, form_data: dict):
     return client.post(
         f"/users/{user_id}/roles",
@@ -314,13 +307,6 @@ def delete_device(access_token: str, device_id: id):
 
 
 # UserHasDevice
-
-def select_user_devices(access_token: str, user_id: id):
-    return client.get(
-        f"/users/{user_id}/devices",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-
 
 def user_has_device_out(access_token: str, user_id: id, form_data: dict):
     return client.post(

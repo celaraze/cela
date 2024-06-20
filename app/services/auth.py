@@ -81,7 +81,9 @@ def create_super_admin(db, form_data: schemas.UserCreateForm):
         if role in user.roles:
             print("User already has superuser role.")
         else:
-            user.roles.append(role)
+            user_has_role = tables.UserHasRole(creator_id=0)
+            user_has_role.role = role
+            user.user_has_roles.append(user_has_role)
             db.commit()
             print("Superuser role added to user.")
 

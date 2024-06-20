@@ -4,6 +4,7 @@ from sqlalchemy import select
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
 from ..database import schemas, tables
 from ..utils import common
+from ..services.role import get_users
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -28,7 +29,7 @@ async def get_roles(
 ):
     stmt = (
         select(tables.Role)
-        .where(tables.Role.deleted_at.isnot(None))
+        .where(tables.Role.deleted_at.is_(None))
         .offset(skip)
         .limit(limit)
     )
@@ -45,7 +46,7 @@ async def get_role(
 ):
     stmt = (
         select(tables.Role)
-        .where(tables.Role.deleted_at.isnot(None))
+        .where(tables.Role.deleted_at.is_(None))
         .where(tables.Role.id.__eq__(role_id))
     )
     role = db.scalars(stmt).one_or_none()
@@ -72,6 +73,7 @@ async def create_role(
     form_data.creator_id = current_user.id
     role = tables.Role(**form_data.dict())
     db.add(role)
+    db.commit()
     return role
 
 
@@ -85,7 +87,7 @@ async def update_role(
 ):
     stmt = (
         select(tables.Role)
-        .where(tables.Role.deleted_at.isnot(None))
+        .where(tables.Role.deleted_at.is_(None))
         .where(tables.Role.id.__eq__(role_id))
     )
     role = db.scalars(stmt).one_or_none()
@@ -114,7 +116,7 @@ async def delete_role(
 ):
     stmt = (
         select(tables.Role)
-        .where(tables.Role.deleted_at.isnot(None))
+        .where(tables.Role.deleted_at.is_(None))
         .where(tables.Role.id.__eq__(role_id))
     )
     role = db.scalars(stmt).one_or_none()
@@ -128,10 +130,14 @@ async def delete_role(
             status_code=status.HTTP_409_CONFLICT,
             detail="Role name 'superuser' is reserved.",
         )
-    if role.users:
+
+    users = get_users(role)
+
+    if users:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Role has users, please update them first.",
         )
     setattr(role, "deleted_at", common.now())
+    db.commit()
     return role

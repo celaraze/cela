@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException, status, Security
+from sqlalchemy import select
 
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
 from ..database import schemas, tables
-from ..services.device import get_user
 from ..utils import common
+from ..services.device import get_brand, get_category, get_users
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -26,15 +27,15 @@ async def get_devices(
         asset_number: str = None,
         current_user: schemas.User = Security(get_current_user, scopes=["device:list"]),
 ):
-    db_query = (
-        db.query(tables.Device)
-        .filter(tables.Device.deleted_at.isnot(None))
+    stmt = (
+        select(tables.Device)
+        .where(tables.Device.deleted_at.is_(None))
         .offset(skip)
         .limit(limit)
     )
     if asset_number:
-        db_query = db_query.filter(tables.Device.asset_number == asset_number)
-    devices = db_query.all()
+        stmt = stmt.where(tables.Device.asset_number.__eq__(asset_number))
+    devices = db.scalars(stmt).all()
     return devices
 
 
@@ -45,24 +46,20 @@ async def get_device(
         device_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["device:info"]),
 ):
-    device = (
-        db.query(tables.Device)
-        .filter(tables.Device.deleted_at.isnot(None))
-        .filter(tables.Device.id == device_id)
-        .first()
+    stmt = (
+        select(tables.Device)
+        .where(tables.Device.deleted_at.is_(None))
+        .where(tables.Device.id.__eq__(device_id))
     )
+    device = db.scalars(stmt).one_or_none()
     if not device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device not exists.",
         )
-    device.creator = (
-        db.query(tables.User)
-        .filter(tables.User.id == device.creator_id)
-        .first()
-    )
-    user = get_user(db, device_id)
-    device.user = user
+    device.brand = get_brand(device)
+    device.category = get_category(device)
+    device.users = get_users(device)
     return device
 
 
@@ -74,34 +71,36 @@ async def create_device(
         current_user: schemas.User = Security(get_current_user, scopes=["device:create"]),
 ):
     # The asset number is always unique, so we don't need to filter soft deleted records.
-    db_device = (
-        db.query(tables.Device)
-        .filter(tables.Device.asset_number == form_data.asset_number)
-        .first()
+    stmt = (
+        select(tables.Device)
+        .where(tables.Device.asset_number.__eq__(form_data.asset_number))
     )
-    if db_device:
+    device = db.scalars(stmt).one_or_none()
+    if device:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Device asset number already exists.",
         )
-    db_brand = (
-        db.query(tables.Brand)
-        .filter(tables.Brand.deleted_at.isnot(None))
-        .filter(tables.Brand.id == form_data.brand_id)
-        .first()
+
+    stmt = (
+        select(tables.Brand)
+        .where(tables.Brand.deleted_at.is_(None))
+        .where(tables.Brand.id.__eq__(form_data.brand_id))
     )
-    if not db_brand:
+    brand = db.scalars(stmt).one_or_none()
+    if not brand:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Brand not exists.",
         )
-    db_device_category = (
-        db.query(tables.DeviceCategory)
-        .filter(tables.DeviceCategory.deleted_at.isnot(None))
-        .filter(tables.DeviceCategory.id == form_data.category_id)
-        .first()
+
+    stmt = (
+        select(tables.DeviceCategory)
+        .where(tables.DeviceCategory.deleted_at.is_(None))
+        .where(tables.DeviceCategory.id.__eq__(form_data.category_id))
     )
-    if not db_device_category:
+    device_category = db.scalars(stmt).one_or_none()
+    if not device_category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device category not exists.",
@@ -110,7 +109,6 @@ async def create_device(
     device = tables.Device(**form_data.dict())
     db.add(device)
     db.commit()
-    db.refresh(device)
     return device
 
 
@@ -122,38 +120,38 @@ async def update_device(
         form_data: list[schemas.UpdateForm],
         current_user: schemas.User = Security(get_current_user, scopes=["device:update"]),
 ):
-    db_device = (
-        db.query(tables.Device)
-        .filter(tables.Device.deleted_at.isnot(None))
-        .filter(tables.Device.id == device_id)
-        .first()
+    stmt = (
+        select(tables.Device)
+        .where(tables.Device.deleted_at.is_(None))
+        .where(tables.Device.id.__eq__(device_id))
     )
-    if not db_device:
+    device = db.scalars(stmt).one_or_none()
+    if not device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device not exists.",
         )
     for form in form_data:
         if form.key == "brand_id":
-            db_brand = (
-                db.query(tables.Brand)
-                .filter(tables.Brand.deleted_at.isnot(None))
-                .filter(tables.Brand.id == form.value)
-                .first()
+            stmt = (
+                select(tables.Brand)
+                .where(tables.Brand.deleted_at.is_(None))
+                .where(tables.Brand.id.__eq__(form.value))
             )
-            if not db_brand:
+            brand = db.scalars(stmt).one_or_none()
+            if not brand:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Brand not exists.",
                 )
         elif form.key == "category_id":
-            db_device_category = (
-                db.query(tables.DeviceCategory)
-                .filter(tables.DeviceCategory.deleted_at.isnot(None))
-                .filter(tables.DeviceCategory.id == form.value)
-                .first()
+            stmt = (
+                select(tables.DeviceCategory)
+                .where(tables.DeviceCategory.deleted_at.is_(None))
+                .where(tables.DeviceCategory.id.__eq__(form.value))
             )
-            if not db_device_category:
+            device_category = db.scalars(stmt).one_or_none()
+            if not device_category:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Device category not exists.",
@@ -166,10 +164,9 @@ async def update_device(
         else:
             continue
     for form in form_data:
-        setattr(db_device, form.key, form.value)
+        setattr(device, form.key, form.value)
     db.commit()
-    db.refresh(db_device)
-    return db_device
+    return device
 
 
 # Delete device.
@@ -179,24 +176,25 @@ async def delete_device(
         device_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["device:delete"]),
 ):
-    db_device = (
-        db.query(tables.Device)
-        .filter(tables.Device.deleted_at.isnot(None))
-        .filter(tables.Device.id == device_id)
-        .first()
+    stmt = (
+        select(tables.Device)
+        .where(tables.Device.deleted_at.is_(None))
+        .where(tables.Device.id.__eq__(device_id))
     )
-    if not db_device:
+    device = db.scalars(stmt).one_or_none()
+    if not device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device not exists.",
         )
-    users = get_user(db, device_id)
+
+    users = get_users(device)
+
     if users:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Device has users, please update them first.",
         )
-    setattr(db_device, "deleted_at", common.now())
+    setattr(device, "deleted_at", common.now())
     db.commit()
-    db.refresh(db_device)
-    return db_device
+    return device

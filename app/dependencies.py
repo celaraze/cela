@@ -93,7 +93,6 @@ async def get_current_user(
 
     if user is None:
         raise credentials_exception
-    user = schemas.User(**user.__dict__)
     for security_scope in security_scopes.scopes:
         if (security_scope not in token_data.scopes) and ("su" not in token_data.scopes):
             raise HTTPException(

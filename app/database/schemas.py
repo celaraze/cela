@@ -117,6 +117,7 @@ class Role(BaseSchema):
     created_at: Union[datetime, None]
     deleted_at: Union[datetime, None]
     creator: Union[Creator, None] = None
+    users: list[Union["UserForRole", None]]
 
     class Config:
         from_attributes = True
@@ -187,6 +188,17 @@ class DeviceCategory(BaseSchema):
     created_at: Union[datetime, None]
     deleted_at: Union[datetime, None]
     creator: Union[Creator, None] = None
+
+    class Config:
+        from_attributes = True
+
+
+class UserForRole(BaseSchema):
+    id: int
+    username: str
+    email: str
+    name: str
+    is_active: bool = True
 
     class Config:
         from_attributes = True
