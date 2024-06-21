@@ -28,7 +28,6 @@ def test_start():
         name="test_admin",
         password="test_admin",
         username="test_admin",
-        creator_id=0,
     )
     functions.create_admin(form_data)
     response = functions.login("test_admin", "test_admin")

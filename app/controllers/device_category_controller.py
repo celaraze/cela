@@ -54,6 +54,7 @@ async def get_device_category(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device Category not exists.",
         )
+    device_category.creator = common.get_creator(db, device_category.creator_id)
     return device_category
 
 
@@ -65,7 +66,7 @@ async def create_device_category(
         current_user: schemas.User = Security(get_current_user, scopes=["device_category:create"]),
 ):
     form_data.creator_id = current_user.id
-    device_category = tables.DeviceCategory(**form_data.dict())
+    device_category = tables.DeviceCategory(**form_data.model_dump())
     db.add(device_category)
     db.commit()
     return device_category
@@ -115,7 +116,7 @@ async def delete_device_category(
             detail="Device Category not exists.",
         )
 
-    devices = get_devices(device_category)
+    devices = get_devices(db, device_category)
 
     if devices:
         raise HTTPException(

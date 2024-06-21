@@ -19,7 +19,6 @@ def test_start():
         name="test_admin",
         password="test_admin",
         username="test_admin",
-        creator_id=0,
     )
     print()
     functions.create_admin(user_create)

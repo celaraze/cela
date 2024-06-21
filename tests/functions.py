@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import MetaData
 
 from app.database.database import SessionLocal, engine
-from app.database import schemas
+from app.database import schemas, tables
 from app.services import auth
 
 from app.main import app
@@ -14,18 +14,14 @@ client = TestClient(app)
 
 def start():
     db = SessionLocal()
-    meta = MetaData()
-    meta.reflect(engine)
-    meta.drop_all(engine)
-    meta.create_all(engine)
+    tables.Base.metadata.drop_all(bind=engine)
+    tables.Base.metadata.create_all(bind=engine)
     db.close()
 
 
 def end():
     db = SessionLocal()
-    meta = MetaData()
-    meta.reflect(engine)
-    meta.drop_all(engine)
+    tables.Base.metadata.drop_all(bind=engine)
     db.close()
 
 

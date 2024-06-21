@@ -57,9 +57,10 @@ async def get_device(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device not exists.",
         )
-    device.brand = get_brand(device)
-    device.category = get_category(device)
-    device.users = get_users(device)
+    device.creator = common.get_creator(db, device.creator_id)
+    device.brand = get_brand(db, device)
+    device.category = get_category(db, device)
+    device.users = get_users(db, device)
     return device
 
 
@@ -106,7 +107,7 @@ async def create_device(
             detail="Device category not exists.",
         )
     form_data.creator_id = current_user.id
-    device = tables.Device(**form_data.dict())
+    device = tables.Device(**form_data.model_dump())
     db.add(device)
     db.commit()
     return device
@@ -188,7 +189,7 @@ async def delete_device(
             detail="Device not exists.",
         )
 
-    users = get_users(device)
+    users = get_users(db, device)
 
     if users:
         raise HTTPException(

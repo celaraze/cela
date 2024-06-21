@@ -55,9 +55,9 @@ async def get_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not exists.",
         )
-
-    user.roles = get_roles(user)
-    user.devices = get_devices(user)
+    user.creator = common.get_creator(db, user.creator_id)
+    user.roles = get_roles(db, user)
+    user.devices = get_devices(db, user)
 
     return user
 
@@ -99,7 +99,7 @@ async def create_user(
     form_data.creator_id = current_user.id
     form_data.hashed_password = crypt.hash_password(form_data.password)
     del form_data.password
-    user = tables.User(**form_data.dict())
+    user = tables.User(**form_data.model_dump())
     db.add(user)
     db.commit()
     return user
@@ -167,24 +167,29 @@ async def delete_user(
             detail="Username name 'admin' is reserved.",
         )
     # Delete user has roles and user has devices.
-    for user_has_role in user.user_has_roles:
-        stmt = (
-            select(tables.UserHasRole)
-            .where(tables.UserHasRole.id.__eq__(user_has_role.id))
-        )
-        user_has_role = db.scalars(stmt).one_or_none()
-        if user_has_role:
-            setattr(user_has_role, "deleted_at", common.now())
+
+    stmt = (
+        select(tables.UserHasRole)
+        .where(tables.UserHasRole.deleted_at.is_(None))
+        .where(tables.UserHasRole.user_id.__eq__(user_id))
+    )
+
+    user_has_roles = db.scalars(stmt).all()
+
+    for user_has_role in user_has_roles:
+        setattr(user_has_role, "deleted_at", common.now())
         db.commit()
 
-    for user_has_device in user.user_has_devices:
-        stmt = (
-            select(tables.UserHasDevice)
-            .where(tables.UserHasDevice.id.__eq__(user_has_device.id))
-        )
-        user_has_device = db.scalars(stmt).one_or_none()
-        if user_has_device:
-            setattr(user_has_device, "deleted_at", common.now())
+    stmt = (
+        select(tables.UserHasDevice)
+        .where(tables.UserHasDevice.deleted_at.is_(None))
+        .where(tables.UserHasDevice.user_id.__eq__(user_id))
+    )
+
+    user_has_devices = db.scalars(stmt).all()
+
+    for user_has_device in user_has_devices:
+        setattr(user_has_device, "deleted_at", common.now())
         db.commit()
 
     setattr(user, "deleted_at", common.now())
@@ -230,15 +235,24 @@ async def create_user_role(
             detail="Role not exists.",
         )
 
-    if role in user.roles:
+    stmt = (
+        select(tables.UserHasRole)
+        .where(tables.UserHasRole.deleted_at.is_(None))
+        .where(tables.UserHasRole.user_id.__eq__(user_id))
+        .where(tables.UserHasRole.role_id.__eq__(form_data.role_id))
+    )
+
+    user_has_role = db.scalars(stmt).one_or_none()
+
+    if user_has_role:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User already has this role.",
         )
 
-    user_has_role = tables.UserHasRole(creator_id=current_user.id, created_at=common.now())
-    user_has_role.role = role
-    user.user_has_roles.append(user_has_role)
+    form_data.creator_id = current_user.id
+    user_has_role = tables.UserHasRole(**form_data.model_dump())
+    db.add(user_has_role)
     db.commit()
 
     raise HTTPException(
@@ -286,6 +300,7 @@ async def delete_user_role(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User role not exists.",
         )
+
     setattr(user_has_role, "deleted_at", common.now())
     db.commit()
 
@@ -340,22 +355,27 @@ async def create_user_device(
             detail="Device not exists.",
         )
 
-    if device in user.devices:
+    stmt = (
+        select(tables.UserHasDevice)
+        .where(tables.UserHasDevice.deleted_at.is_(None))
+        .where(tables.UserHasDevice.user_id.__eq__(user_id))
+        .where(tables.UserHasDevice.device_id.__eq__(form_data.device_id))
+    )
+
+    user_has_device = db.scalars(stmt).one_or_none()
+
+    if user_has_device:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User device already exists.",
         )
 
-    user_has_device = tables.UserHasDevice(
-        flag=form_data.flag,
-        message=form_data.message or None,
-        expired_at=form_data.expired_at or None,
-        status=0,
-        creator_id=current_user.id,
-        created_at=common.now(),
-    )
-    user_has_device.device = device
-    user.user_has_devices.append(user_has_device)
+    form_data.status = 0
+    form_data.creator_id = current_user.id
+    form_data.created_at = common.now()
+
+    user_has_device = tables.UserHasDevice(**form_data.model_dump())
+    db.add(user_has_device)
     db.commit()
 
     raise HTTPException(
@@ -402,7 +422,14 @@ async def delete_user_device(
             detail="Device not exists.",
         )
 
-    if device not in user.devices:
+    stmt = (
+        select(tables.UserHasDevice)
+        .where(tables.UserHasDevice.deleted_at.is_(None))
+        .where(tables.UserHasDevice.user_id.__eq__(user_id))
+        .where(tables.UserHasDevice.device_id.__eq__(form_data.device_id))
+    )
+    user_has_devices = db.scalars(stmt).all()
+    if not user_has_devices:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User device not exists.",
@@ -413,6 +440,7 @@ async def delete_user_device(
         .where(tables.UserHasDevice.user_id.__eq__(user_id))
         .where(tables.UserHasDevice.device_id.__eq__(form_data.device_id))
     )
+
     old_user_has_device = db.scalars(stmt).one_or_none()
     if not old_user_has_device:
         raise HTTPException(
@@ -420,18 +448,23 @@ async def delete_user_device(
             detail="User device not exists.",
         )
 
-    new_user_has_device = old_user_has_device
-    new_user_has_device.id = None
-    new_user_has_device.flag = -1
-    new_user_has_device.status = 1
-    new_user_has_device.creator_id = current_user.id
-    new_user_has_device.created_at = common.now()
+    form_data = schemas.UserHasDeviceCreateOrUpdateForm(
+        user_id=old_user_has_device.user_id,
+        device_id=old_user_has_device.device_id,
+        flag=-1,
+        status=1,
+        message="Returned",
+        creator_id=current_user.id,
+        deleted_at=common.now(),
+    )
+
+    new_user_has_device = tables.UserHasDevice(**form_data.model_dump())
     db.add(new_user_has_device)
+    db.commit()
 
     old_user_has_device.deleted_at = common.now()
     db.commit()
 
-    # result = returned(db, user, device, current_user.id)
     if not new_user_has_device:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,

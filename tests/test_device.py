@@ -25,7 +25,6 @@ def test_start():
         name="test_admin",
         password="test_admin",
         username="test_admin",
-        creator_id=0,
     )
     functions.create_admin(form_data)
     response = functions.login("test_admin", "test_admin")
@@ -158,6 +157,7 @@ def test_delete():
         "expired_at": "2022-01-01 00:00:00",
     }
     response = functions.user_has_device_out(admin_access_token, 1, form_data)
+    print(response.json())
     assert response.status_code == 200
 
     response = functions.delete_device(admin_access_token, device_id)
@@ -180,6 +180,6 @@ def test_delete():
     response = functions.select_device(admin_access_token, device_id)
     assert response.status_code == 404
 
-
-def test_end():
-    functions.end()
+#
+# def test_end():
+#     functions.end()

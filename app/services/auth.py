@@ -7,6 +7,7 @@ from sqlalchemy import select
 from ..database import schemas, tables
 from ..utils import crypt
 from ..utils.config import get_jwt_config
+from ..services.user import get_roles
 
 
 def create_access_token(data: dict):
@@ -57,7 +58,7 @@ def create_super_admin(db, form_data: schemas.UserCreateForm):
                 name="superuser",
                 scopes=["su"]
             )
-            role = tables.Role(**role_create.dict())
+            role = tables.Role(**role_create.model_dump())
             db.add(role)
             db.commit()
             print("Superuser role created successfully.")
@@ -73,17 +74,20 @@ def create_super_admin(db, form_data: schemas.UserCreateForm):
             form_data.hashed_password = crypt.hash_password(form_data.password)
             del form_data.password
             form_data.creator_id = form_data.creator_id
-            user = tables.User(**form_data.dict())
+            user = tables.User(**form_data.model_dump())
             db.add(user)
             db.commit()
         else:
             print("User already exists.")
-        if role in user.roles:
+        if role in get_roles(db, user):
             print("User already has superuser role.")
         else:
-            user_has_role = tables.UserHasRole(creator_id=0)
-            user_has_role.role = role
-            user.user_has_roles.append(user_has_role)
+            form_data = schemas.UserHasRoleCreateForm(
+                user_id=user.id,
+                role_id=role.id,
+            )
+            user_has_role = tables.UserHasRole(**form_data.model_dump())
+            db.add(user_has_role)
             db.commit()
             print("Superuser role added to user.")
 

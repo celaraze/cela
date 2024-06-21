@@ -75,6 +75,7 @@ class UserHasDeviceCreateOrUpdateForm(BaseSchema):
     status: int = 0
     creator_id: int = 0
     created_at: str = common.now()
+    deleted_at: Union[datetime, None] = None
 
 
 class FootprintCreateForm(BaseSchema):
@@ -117,9 +118,9 @@ class Role(BaseSchema):
     created_at: Union[datetime, None]
     deleted_at: Union[datetime, None]
     creator: Union[Creator, None] = None
-    users: list[Union["UserForRole", None]]
+    users: list["User"] = []
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 
@@ -135,7 +136,7 @@ class Footprint(BaseSchema):
     deleted_at: Union[datetime, None]
     creator: Union[Creator, None] = None
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 
@@ -148,7 +149,7 @@ class UserHasRole(BaseSchema):
     deleted_at: Union[datetime, None]
     creator: Union[Creator, None] = None
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 
@@ -165,7 +166,7 @@ class UserHasDevice(BaseSchema):
     deleted_at: Union[datetime, None]
     creator: Union[Creator, None] = None
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 
@@ -177,7 +178,7 @@ class Brand(BaseSchema):
     deleted_at: Union[datetime, None]
     creator: Union[Creator, None] = None
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 
@@ -189,7 +190,7 @@ class DeviceCategory(BaseSchema):
     deleted_at: Union[datetime, None]
     creator: Union[Creator, None] = None
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 
@@ -200,7 +201,7 @@ class UserForRole(BaseSchema):
     name: str
     is_active: bool = True
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 
@@ -211,7 +212,7 @@ class UserForDevice(BaseSchema):
     name: str
     is_active: bool = True
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 
@@ -229,9 +230,9 @@ class Device(BaseSchema):
 
     brand: Union[Brand, None] = None
     category: Union[DeviceCategory, None] = None
-    users: list[Union[UserForDevice, None]] = []
+    users: list["User"] = []
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 
@@ -249,5 +250,5 @@ class User(BaseSchema):
     scopes: list[str] = []
     devices: list[Device] = []
 
-    class Config:
+    class ConfigDict:
         from_attributes = True

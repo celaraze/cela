@@ -18,7 +18,6 @@ def create_super_admin():
             email=email,
             name=name,
             password=password,
-            creator_id=0
         )
     )
     db.close()
@@ -37,7 +36,6 @@ def init_super_admin():
             email=email,
             name=name,
             password=password,
-            creator_id=0
         )
     )
     db.close()

@@ -55,6 +55,7 @@ async def get_brand(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Brand not exists.",
         )
+    brand.creator = common.get_creator(db, brand.creator_id)
     return brand
 
 
@@ -66,7 +67,7 @@ async def create_brand(
         current_user: schemas.User = Security(get_current_user, scopes=["brand:create"]),
 ):
     form_data.creator_id = current_user.id
-    brand = tables.Brand(**form_data.dict())
+    brand = tables.Brand(**form_data.model_dump())
     db.add(brand)
     db.commit()
     return brand
@@ -116,7 +117,7 @@ async def delete_brand(
             detail="Brand not exists.",
         )
 
-    devices = get_devices(brand)
+    devices = get_devices(db, brand)
 
     if devices:
         raise HTTPException(

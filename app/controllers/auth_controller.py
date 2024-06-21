@@ -37,7 +37,6 @@ async def init(
             email=email,
             name=name,
             password=password,
-            creator_id=0
         )
     )
     raise HTTPException(
@@ -59,7 +58,7 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     scopes = []
-    roles = get_roles(user)
+    roles = get_roles(db, user)
     for role in roles:
         scopes.extend(role.scopes)
     access_token = create_access_token(data={"user_id": user.id, "scopes": scopes})
@@ -132,7 +131,7 @@ async def refresh_scopes(
         current_user: schemas.User = Security(get_current_user, scopes=["auth:me"]),
 ):
     scopes = []
-    roles = get_roles(current_user)
+    roles = get_roles(db, current_user)
     for role in roles:
         scopes.extend(role.scopes)
     access_token = create_access_token(data={"user_id": current_user.id, "scopes": scopes})

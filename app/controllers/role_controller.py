@@ -55,6 +55,7 @@ async def get_role(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Role not exists.",
         )
+    role.creator = common.get_creator(db, role.creator_id)
     return role
 
 
@@ -71,7 +72,7 @@ async def create_role(
             detail="Role name 'superuser' is reserved.",
         )
     form_data.creator_id = current_user.id
-    role = tables.Role(**form_data.dict())
+    role = tables.Role(**form_data.model_dump())
     db.add(role)
     db.commit()
     return role
@@ -131,7 +132,7 @@ async def delete_role(
             detail="Role name 'superuser' is reserved.",
         )
 
-    users = get_users(role)
+    users = get_users(db, role)
 
     if users:
         raise HTTPException(
