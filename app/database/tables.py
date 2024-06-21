@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.database.database import Base
 
 
-class Additions():
+class Additions:
     creator_id: Mapped[int] = mapped_column(Integer, nullable=True, comment="创建者 ID")
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, comment="创建时间")
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, comment="删除时间")

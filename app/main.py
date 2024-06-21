@@ -46,3 +46,16 @@ app.include_router(user_controller.router)
 app.include_router(brand_controller.router)
 app.include_router(device_category_controller.router)
 app.include_router(device_controller.router)
+
+
+@app.get("/")
+async def home():
+    body = {
+        "message": "Welcome to Cela API.",
+        "data": {
+            "version": "0.0.3-alpha",
+            "author": "celaraze",
+            "github": "https://github.com/celaraze/cela.git",
+        }
+    }
+    return body

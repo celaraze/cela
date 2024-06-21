@@ -4,7 +4,7 @@ from sqlalchemy import select
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
 from ..database import schemas, tables
 from ..utils import common
-from ..services.device import get_brand, get_category, get_users
+from ..services.device import get_brand, get_category, get_user, get_historical_users
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -60,7 +60,7 @@ async def get_device(
     device.creator = common.get_creator(db, device.creator_id)
     device.brand = get_brand(db, device)
     device.category = get_category(db, device)
-    device.users = get_users(db, device)
+    device.users = get_user(db, device)
     return device
 
 
@@ -189,7 +189,7 @@ async def delete_device(
             detail="Device not exists.",
         )
 
-    users = get_users(db, device)
+    users = get_user(db, device)
 
     if users:
         raise HTTPException(
@@ -199,3 +199,50 @@ async def delete_device(
     setattr(device, "deleted_at", common.now())
     db.commit()
     return device
+
+
+# API for user has device.
+
+# Get device users.
+@router.get("/{device_id}/users", response_model=list[schemas.UserForDevice])
+async def get_device_users(
+        db: databaseSession,
+        device_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["device:users"]),
+):
+    stmt = (
+        select(tables.Device)
+        .where(tables.Device.deleted_at.is_(None))
+        .where(tables.Device.id.__eq__(device_id))
+    )
+    device = db.scalars(stmt).one_or_none()
+
+    if not device:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Device not exists.",
+        )
+
+    users = get_historical_users(db, device)
+    return users
+
+
+# Get historical users.
+@router.get("/{device_id}/users/historical", response_model=list[schemas.DeviceHistoricalUser])
+async def select_role_historical_users(
+        db: databaseSession,
+        device_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:historical"]),
+):
+    stmt = (
+        select(tables.Device)
+        .where(tables.Device.id.__eq__(device_id))
+    )
+    device = db.scalars(stmt).one_or_none()
+    if not device:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Device not exists.",
+        )
+    historical_users = get_historical_users(db, device)
+    return historical_users

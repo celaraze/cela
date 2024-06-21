@@ -4,7 +4,7 @@ from sqlalchemy import select
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
 from ..database import schemas, tables
 from ..utils import common
-from ..services.role import get_users
+from ..services.role import get_users, get_historical_users
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -142,3 +142,47 @@ async def delete_role(
     setattr(role, "deleted_at", common.now())
     db.commit()
     return role
+
+
+# API for user has role.
+# Get role users.
+@router.get("/{role_id}/users", response_model=list[schemas.UserForRole])
+async def select_role_users(
+        db: databaseSession,
+        role_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:list"]),
+):
+    stmt = (
+        select(tables.Role)
+        .where(tables.Role.deleted_at.is_(None))
+        .where(tables.Role.id.__eq__(user_id))
+    )
+    role = db.scalars(stmt).one_or_none()
+    if not role:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role not exists.",
+        )
+    users = get_users(db, role)
+    return users
+
+
+# Get historical users.
+@router.get("/{role_id}/users/historical", response_model=list[schemas.RoleHistoricalUser])
+async def select_role_historical_users(
+        db: databaseSession,
+        role_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:historical"]),
+):
+    stmt = (
+        select(tables.Role)
+        .where(tables.Role.id.__eq__(role_id))
+    )
+    role = db.scalars(stmt).one_or_none()
+    if not role:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role not exists.",
+        )
+    historical_users = get_historical_users(db, role)
+    return historical_users

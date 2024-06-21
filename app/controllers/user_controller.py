@@ -4,7 +4,7 @@ from sqlalchemy import select
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
 from ..database import schemas, tables
 from ..utils import crypt, common
-from ..services.user import get_roles, get_devices
+from ..services.user import get_roles, get_devices, get_historical_roles, get_historical_devices
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -56,8 +56,6 @@ async def get_user(
             detail="User not exists.",
         )
     user.creator = common.get_creator(db, user.creator_id)
-    user.roles = get_roles(db, user)
-    user.devices = get_devices(db, user)
 
     return user
 
@@ -199,6 +197,49 @@ async def delete_user(
 
 # API for user has role.
 
+# Get user's roles.
+@router.get("/{user_id}/roles", response_model=list[schemas.RoleForUser])
+async def select_user_roles(
+        db: databaseSession,
+        user_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:list"]),
+):
+    stmt = (
+        select(tables.User)
+        .where(tables.User.deleted_at.is_(None))
+        .where(tables.User.id.__eq__(user_id))
+    )
+    user = db.scalars(stmt).one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not exists.",
+        )
+    roles = get_roles(db, user)
+    return roles
+
+
+# Get user's historical roles.
+@router.get("/{user_id}/roles/historical", response_model=list[schemas.UserHistoricalRole])
+async def select_user_historical_roles(
+        db: databaseSession,
+        user_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["user_has_role:historical"]),
+):
+    stmt = (
+        select(tables.User)
+        .where(tables.User.id.__eq__(user_id))
+    )
+    user = db.scalars(stmt).one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not exists.",
+        )
+    historical_roles = get_historical_roles(db, user)
+    return historical_roles
+
+
 # Create user's role.
 @router.post("/{user_id}/roles", response_model=schemas.UserHasRole)
 async def create_user_role(
@@ -291,6 +332,7 @@ async def delete_user_role(
 
     stmt = (
         select(tables.UserHasRole)
+        .where(tables.UserHasRole.deleted_at.is_(None))
         .where(tables.UserHasRole.user_id.__eq__(user_id))
         .where(tables.UserHasRole.role_id.__eq__(role_id))
     )
@@ -311,6 +353,48 @@ async def delete_user_role(
 
 
 # API for user has device.
+
+# Get user's devices.
+@router.get("/{user_id}/devices", response_model=list[schemas.DeviceForUser])
+async def select_user_devices(
+        db: databaseSession,
+        user_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["user_has_device:list"]),
+):
+    stmt = (
+        select(tables.User)
+        .where(tables.User.deleted_at.is_(None))
+        .where(tables.User.id.__eq__(user_id))
+    )
+    user = db.scalars(stmt).one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not exists.",
+        )
+    devices = get_devices(db, user)
+    return devices
+
+
+@router.get("/{user_id}/devices/historical", response_model=list[schemas.UserHistoricalDevice])
+async def select_user_historical_devices(
+        db: databaseSession,
+        user_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["user_has_device:historical"]),
+):
+    stmt = (
+        select(tables.User)
+        .where(tables.User.id.__eq__(user_id))
+    )
+    user = db.scalars(stmt).one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not exists.",
+        )
+    devices = get_historical_devices(db, user)
+    return devices
+
 
 # Create user's device.
 @router.post("/{user_id}/devices/out", response_model=schemas.UserHasDevice)
@@ -431,7 +515,7 @@ async def delete_user_device(
     user_has_devices = db.scalars(stmt).all()
     if not user_has_devices:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="User device not exists.",
         )
 

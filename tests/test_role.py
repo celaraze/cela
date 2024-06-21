@@ -38,7 +38,6 @@ def test_create():
         "scopes": ["test:read"],
     }
     response = functions.create_role(admin_access_token, form_data)
-    print(response.json())
     assert response.status_code == 200
     role_id = response.json()['id']
 

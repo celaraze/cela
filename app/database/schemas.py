@@ -153,6 +153,61 @@ class UserHasRole(BaseSchema):
         from_attributes = True
 
 
+class UserHistoricalRole(BaseSchema):
+    id: int
+    role_id: int
+    role_name: str
+    role_scopes: list[str]
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
+    creator: Union[Creator, None] = None
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class RoleHistoricalUser(BaseSchema):
+    id: int
+    user_id: int
+    user_name: str
+    user_username: str
+    user_email: str
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
+    creator: Union[Creator, None] = None
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class DeviceHistoricalUser(BaseSchema):
+    id: int
+    user_id: int
+    user_name: str
+    user_username: str
+    user_email: str
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
+    creator: Union[Creator, None] = None
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class UserHistoricalDevice(BaseSchema):
+    id: int
+    device_id: int
+    device_hostname: str
+    device_asset_number: str
+    device_description: Union[str, None]
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
+    creator: Union[Creator, None] = None
+
+    class ConfigDict:
+        from_attributes = True
+
+
 class UserHasDevice(BaseSchema):
     id: int
     user_id: int
@@ -194,12 +249,31 @@ class DeviceCategory(BaseSchema):
         from_attributes = True
 
 
+class RoleForUser(BaseSchema):
+    id: int
+    name: str
+    scopes: list[str]
+
+    # This is not user's created_at, but user_has_device's created_at.
+    created_at: Union[datetime, None]
+    # This is not user's deleted_at, but user_has_device's deleted_at.
+    deleted_at: Union[datetime, None]
+
+    class ConfigDict:
+        from_attributes = True
+
+
 class UserForRole(BaseSchema):
     id: int
     username: str
     email: str
     name: str
     is_active: bool = True
+
+    # This is not user's created_at, but user_has_device's created_at.
+    created_at: Union[datetime, None]
+    # This is not user's deleted_at, but user_has_device's deleted_at.
+    deleted_at: Union[datetime, None]
 
     class ConfigDict:
         from_attributes = True
@@ -211,6 +285,32 @@ class UserForDevice(BaseSchema):
     email: str
     name: str
     is_active: bool = True
+
+    # This is not user's created_at, but user_has_device's created_at.
+    created_at: Union[datetime, None]
+    # This is not user's deleted_at, but user_has_device's deleted_at.
+    deleted_at: Union[datetime, None]
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class DeviceForUser(BaseSchema):
+    id: int
+    hostname: str
+    asset_number: str
+    ipv4_address: Union[str, None]
+    ipv6_address: Union[str, None]
+    mac_address: Union[str, None]
+    description: Union[str, None]
+
+    # This is not device's created_at, but user_has_device's created_at.
+    created_at: Union[datetime, None]
+    # This is not device's deleted_at, but user_has_device's deleted_at.
+    deleted_at: Union[datetime, None]
+
+    brand: Union[Brand, None] = None
+    category: Union[DeviceCategory, None] = None
 
     class ConfigDict:
         from_attributes = True
@@ -230,7 +330,7 @@ class Device(BaseSchema):
 
     brand: Union[Brand, None] = None
     category: Union[DeviceCategory, None] = None
-    users: list["User"] = []
+    users: Union["User", None] = None
 
     class ConfigDict:
         from_attributes = True

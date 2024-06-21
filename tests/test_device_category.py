@@ -93,6 +93,10 @@ def test_delete():
     assert response.status_code == 200
     device_id = response.json()['id']
 
+    response = functions.select_device_category_devices(admin_access_token, device_category_id)
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+
     response = functions.delete_device_category(admin_access_token, device_category_id)
     assert response.status_code == 409
 

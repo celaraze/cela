@@ -47,7 +47,6 @@ def test_create():
 def test_select():
     response = functions.select_brands(admin_access_token)
     assert response.status_code == 200
-    print(response.json())
 
     response = functions.select_brand(admin_access_token, 0)
     assert response.status_code == 404
@@ -93,6 +92,10 @@ def test_delete():
     response = functions.create_device(admin_access_token, form_data)
     assert response.status_code == 200
     device_id = response.json()['id']
+
+    response = functions.select_brand_devices(admin_access_token, brand_id)
+    assert response.status_code == 200
+    assert len(response.json()) == 1
 
     response = functions.delete_brand(admin_access_token, brand_id)
     assert response.status_code == 409

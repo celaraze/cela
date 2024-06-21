@@ -127,3 +127,26 @@ async def delete_brand(
     setattr(brand, "deleted_at", common.now())
     db.commit()
     return brand
+
+
+# Get devices by brand id.
+@router.get("/{brand_id}/devices", response_model=list[schemas.Device])
+async def select_device_category_devices(
+        db: databaseSession,
+        brand_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["device_category:devices"]),
+):
+    stmt = (
+        select(tables.Brand)
+        .where(tables.Brand.deleted_at.is_(None))
+        .where(tables.Brand.id.__eq__(brand_id))
+    )
+    brand = db.scalars(stmt).one_or_none()
+    if not brand:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Brand not exists.",
+        )
+
+    devices = get_devices(db, brand)
+    return devices

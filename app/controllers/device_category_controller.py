@@ -126,3 +126,26 @@ async def delete_device_category(
     setattr(device_category, "deleted_at", common.now())
     db.commit()
     return device_category
+
+
+# Get devices by device category id.
+@router.get("/{device_category_id}/devices", response_model=list[schemas.Device])
+async def select_device_category_devices(
+        db: databaseSession,
+        device_category_id: int,
+        current_user: schemas.User = Security(get_current_user, scopes=["device_category:devices"]),
+):
+    stmt = (
+        select(tables.DeviceCategory)
+        .where(tables.DeviceCategory.deleted_at.is_(None))
+        .where(tables.DeviceCategory.id.__eq__(device_category_id))
+    )
+    device_category = db.scalars(stmt).one_or_none()
+    if not device_category:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Device Category not exists.",
+        )
+
+    devices = get_devices(db, device_category)
+    return devices

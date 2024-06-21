@@ -242,7 +242,6 @@ def test_delete():
     assert len(response.json()) == 1
 
     response = functions.delete_user(admin_access_token, user_id)
-    print(response.json())
     assert response.status_code == 200
 
     response = functions.delete_user(admin_access_token, user_id)
@@ -250,6 +249,102 @@ def test_delete():
 
     response = functions.select_user(admin_access_token, user_id)
     assert response.status_code == 404
+
+
+def test_user_has_role():
+    form_data = {
+        "name": "test_role_2",
+        "scopes": [
+            'user:list'
+        ]
+    }
+    response = functions.create_role(admin_access_token, form_data)
+    assert response.status_code == 200
+
+    form_data = {
+        "user_id": 1,
+        "role_id": role_id,
+    }
+    response = functions.create_user_has_role(admin_access_token, 1, form_data)
+    assert response.status_code == 200
+
+    response = functions.create_user_has_role(admin_access_token, 1, form_data)
+    assert response.status_code == 409
+
+    response = functions.select_user_roles(admin_access_token, 1)
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+
+    response = functions.delete_user_has_role(admin_access_token, 1, role_id)
+    assert response.status_code == 200
+
+    response = functions.delete_user_has_role(admin_access_token, 1, role_id)
+    assert response.status_code == 404
+
+    response = functions.select_user_roles(admin_access_token, 1)
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+
+    response = functions.select_user_historical_roles(admin_access_token, 1)
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+
+
+def test_user_has_device():
+    global device_id
+
+    form_data = {
+        "name": "test_brand_2",
+    }
+    response = functions.create_brand(admin_access_token, form_data)
+    assert response.status_code == 200
+    brand_id = response.json()['id']
+
+    form_data = {
+        "name": "test_device_category_2",
+    }
+    response = functions.create_device_category(admin_access_token, form_data)
+    assert response.status_code == 200
+    device_category_id = response.json()['id']
+
+    form_data = {
+        "hostname": "test_device",
+        "asset_number": "PC0003",
+        "brand_id": brand_id,
+        "category_id": device_category_id,
+    }
+    response = functions.create_device(admin_access_token, form_data)
+    assert response.status_code == 200
+    device_id = response.json()['id']
+
+    form_data = {
+        "user_id": 1,
+        "device_id": device_id,
+        "flag": 1,
+    }
+    response = functions.user_has_device_out(admin_access_token, 1, form_data)
+    assert response.status_code == 200
+
+    response = functions.user_has_device_out(admin_access_token, 1, form_data)
+    assert response.status_code == 409
+
+    response = functions.select_user_devices(admin_access_token, 1)
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+
+    response = functions.user_has_device_in(admin_access_token, 1, form_data)
+    assert response.status_code == 200
+
+    response = functions.user_has_device_in(admin_access_token, 1, form_data)
+    assert response.status_code == 404
+
+    response = functions.select_user_devices(admin_access_token, 1)
+    assert response.status_code == 200
+    assert len(response.json()) == 0
+
+    response = functions.select_user_historical_devices(admin_access_token, 1)
+    assert response.status_code == 200
+    assert len(response.json()) == 2
 
 
 def test_end():
