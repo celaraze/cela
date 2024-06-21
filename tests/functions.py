@@ -353,3 +353,75 @@ def user_has_device_in(access_token: str, user_id: id, form_data: dict):
         headers={"Authorization": f"Bearer {access_token}"},
         json=form_data,
     )
+
+
+def search_asset_numbers(access_token: str, asset_number: str):
+    return client.get(
+        f"/search/assets/asset_number/{asset_number}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def search_tickets(access_token: str, keyword: str):
+    return client.get(
+        f"/search/tickets/title/{keyword}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def select_tickets(access_token: str):
+    return client.get(
+        f"/tickets",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def select_ticket(access_token: str, ticket_id: id):
+    return client.get(
+        f"/tickets/{ticket_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def create_ticket(access_token: str, form_data: dict):
+    return client.post(
+        f"/tickets",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data
+    )
+
+
+def update_ticket(access_token: str, ticket_id: id, form_data: list[dict]):
+    return client.put(
+        f"/tickets/{ticket_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data
+    )
+
+
+def delete_ticket(access_token: str, ticket_id: id):
+    return client.delete(
+        f"/tickets/{ticket_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def create_ticket_comment(access_token: str, ticket_id: id, form_data: dict):
+    return client.post(
+        f"/tickets/{ticket_id}/comments",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data
+    )
+
+
+def start_work_on_ticket(access_token: str, ticket_id: id):
+    return client.post(
+        f"/tickets/{ticket_id}/start_work",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def end_work_on_ticket(access_token: str, ticket_id: id):
+    return client.post(
+        f"/tickets/{ticket_id}/end_work",
+    )

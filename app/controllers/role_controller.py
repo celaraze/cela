@@ -21,7 +21,7 @@ router = APIRouter(
 
 # Get all roles.
 @router.get("/", response_model=list[schemas.Role])
-async def get_roles(
+async def select_roles(
         db: databaseSession,
         skip: int = 0,
         limit: int = 100,
@@ -39,7 +39,7 @@ async def get_roles(
 
 # Get role by id.
 @router.get("/{role_id}", response_model=schemas.Role)
-async def get_role(
+async def select_role(
         db: databaseSession,
         role_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["role:info"]),

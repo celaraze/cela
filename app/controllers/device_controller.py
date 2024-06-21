@@ -71,9 +71,9 @@ async def create_device(
         form_data: schemas.DeviceCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["device:create"]),
 ):
-    # The asset number is always unique, so we don't need to filter soft deleted records.
     stmt = (
         select(tables.Device)
+        .where(tables.Device.deleted_at.is_(None))
         .where(tables.Device.asset_number.__eq__(form_data.asset_number))
     )
     device = db.scalars(stmt).one_or_none()
@@ -106,9 +106,28 @@ async def create_device(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Device category not exists.",
         )
+
+    if common.check_asset_number(db, form_data.asset_number):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Asset number already exists.",
+        )
+
     form_data.creator_id = current_user.id
     device = tables.Device(**form_data.model_dump())
     db.add(device)
+    db.commit()
+
+    asset_number_form = schemas.AssetNumberCreateForm(
+        number=form_data.asset_number,
+        table_name="Device",
+        table_id=device.id,
+        creator_id=current_user.id,
+    )
+
+    asset_number = tables.AssetNumber(**asset_number_form.model_dump())
+    db.add(asset_number)
+
     db.commit()
     return device
 
@@ -197,6 +216,16 @@ async def delete_device(
             detail="Device has users, please update them first.",
         )
     setattr(device, "deleted_at", common.now())
+
+    stmt = (
+        select(tables.AssetNumber)
+        .where(tables.AssetNumber.deleted_at.is_(None))
+        .where(tables.AssetNumber.table_name.__eq__("Device"))
+        .where(tables.AssetNumber.table_id.__eq__(device_id))
+    )
+    asset_number = db.scalars(stmt).one_or_none()
+    if asset_number:
+        setattr(asset_number, "deleted_at", common.now())
     db.commit()
     return device
 

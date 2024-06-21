@@ -21,7 +21,7 @@ router = APIRouter(
 
 # Get all brands.
 @router.get("/", response_model=list[schemas.Brand])
-async def get_brands(
+async def select_brands(
         db: databaseSession,
         skip: int = 0,
         limit: int = 100,
@@ -39,7 +39,7 @@ async def get_brands(
 
 # Get brand by id.
 @router.get("/{brand_id}", response_model=schemas.Brand)
-async def get_brand(
+async def select_brand(
         db: databaseSession,
         brand_id: int,
         current_user: schemas.User = Security(get_current_user, scopes=["brand:info"]),

@@ -8,6 +8,8 @@ from .controllers import (
     brand_controller,
     device_category_controller,
     device_controller,
+    search_controller,
+    ticket_controller,
 )
 
 tables.Base.metadata.create_all(bind=engine)
@@ -46,6 +48,8 @@ app.include_router(user_controller.router)
 app.include_router(brand_controller.router)
 app.include_router(device_category_controller.router)
 app.include_router(device_controller.router)
+app.include_router(search_controller.router)
+app.include_router(ticket_controller.router)
 
 
 @app.get("/")

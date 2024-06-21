@@ -103,6 +103,9 @@ def test_create():
     assert response.status_code == 200
     assert response.json()['ipv4_address'] == "192.168.1.1"
 
+    response = functions.search_asset_numbers(admin_access_token, "PC0002")
+    assert response.status_code == 200
+
 
 def test_select():
     response = functions.select_devices(admin_access_token)

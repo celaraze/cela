@@ -101,8 +101,52 @@ class DeviceCreateForm(BaseSchema):
     created_at: str = common.now()
 
 
+class AssetNumberCreateForm(BaseSchema):
+    number: str
+    table_name: str
+    table_id: int
+    creator_id: int = 0
+    created_at: str = common.now()
+
+
+class TicketCreateForm(BaseSchema):
+    title: str
+    description: str
+    asset_number: Union[str, None] = None
+    status: int = 0
+    assignee_id: Union[int, None] = None
+    priority: int = 0
+    expired_at: Union[datetime, None] = None
+    deleter_id: Union[int, None] = None
+    creator_id: int = 0
+    created_at: str = common.now()
+
+
+class TicketCommentCreateForm(BaseSchema):
+    ticket_id: int
+    comment: str
+    creator_id: int = 0
+    created_at: str = common.now()
+
+
+class TicketWorkTimeCreateForm(BaseSchema):
+    ticket_id: int
+    flag: int = 0
+    message: Union[str, None] = None
+    creator_id: int = 0
+    created_at: str = common.now()
+
+
 # Model schemas.
 class Creator(BaseSchema):
+    id: int
+    name: str
+    username: str
+    email: str
+    is_active: bool
+
+
+class Deleter(BaseSchema):
     id: int
     name: str
     username: str
@@ -349,6 +393,67 @@ class User(BaseSchema):
     roles: list[Role] = []
     scopes: list[str] = []
     devices: list[Device] = []
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class AssetNumber(BaseSchema):
+    id: int
+    number: str
+    table_name: str
+    table_id: int
+    creator_id: int
+    created_at: Union[datetime, None]
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class Ticket(BaseSchema):
+    id: int
+    title: str
+    description: str
+    asset_number: Union[str, None]
+    status: int
+    assignee_id: Union[int, None]
+    priority: int
+    expired_at: Union[datetime, None]
+    deleter_id: Union[int, None]
+    creator_id: int
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
+    creator: Union[Creator, None] = None
+    deleter: Union[Deleter, None] = None
+
+    comments: list["TicketComment"] = []
+    work_times: list["TicketWorkTime"] = []
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class TicketComment(BaseSchema):
+    id: int
+    ticket_id: int
+    comment: str
+    creator_id: int
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
+    creator: Union[Creator, None] = None
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class TicketWorkTime(BaseSchema):
+    id: int
+    ticket_id: int
+    flag: int
+    message: Union[str, None]
+    creator_id: int
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
 
     class ConfigDict:
         from_attributes = True
