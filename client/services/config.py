@@ -2,20 +2,22 @@ import os
 import yaml
 from rich import print
 
+from client.util import trans
+
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser('~'), '.cela', 'config.yml')
 
 
 def remove():
     if os.path.exists(CONFIG_FILE_PATH):
         os.remove(CONFIG_FILE_PATH)
-        print("Config file removed.")
+        print(trans("remove_config_success"))
     else:
-        print("Config file not found.")
+        print(trans("remove_config_not_found"))
 
 
 def read(key: str = None):
     if not os.path.exists(CONFIG_FILE_PATH):
-        print("Failed to open config file. Please run `cela connect` first.")
+        print(trans("config_not_found"))
         exit(1)
     with open(CONFIG_FILE_PATH, "r") as f:
         content = yaml.load(f, Loader=yaml.FullLoader)
@@ -47,7 +49,7 @@ def read_server_url():
     try:
         return read("server_url")
     except KeyError:
-        print("Server URL not found. Please run `cela connect` first.")
+        print(trans("server_url_not_found"))
         exit(1)
 
 
@@ -55,5 +57,12 @@ def read_access_token():
     try:
         return read("access_token")
     except KeyError:
-        print("Access token not found. Please run `cela login` first.")
+        print(trans("access_token_not_found"))
         exit(1)
+
+
+def read_lang():
+    try:
+        return read("lang")
+    except KeyError:
+        return "en_US"

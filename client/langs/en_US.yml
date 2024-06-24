@@ -1,0 +1,12 @@
+switch_lang_success: "Switch language successfully!"
+remove_config_success: "Remove config successfully!"
+remove_config_not_found: "Failed to remove config file, not found."
+config_not_found: "Failed to open config file. Please run `cela connect` first."
+server_url_not_found: "Failed to open config file. Please run `cela connect` first."
+account_not_found: "Access token not found. Please run `cela login` first."
+
+connecting: "Connecting to the server..."
+connect_failed: "Failed to connect to the server."
+connect_success: "Connected to the server successfully."
+logging_in: "Logging in..."
+login_success: "Logged in successfully."

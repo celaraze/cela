@@ -37,7 +37,6 @@ def test_create():
         "description": "The LAN connection is not working.",
     }
     response = functions.create_ticket(admin_access_token, form_data)
-    print(response.json())
     assert response.status_code == 200
     ticket_id = response.json()['id']
 
@@ -96,7 +95,6 @@ def test_ticket_has_comments():
         "description": "The LAN connection is not working.",
     }
     response = functions.create_ticket(admin_access_token, form_data)
-    print(response.json())
     assert response.status_code == 200
     ticket_id = response.json()['id']
 

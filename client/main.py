@@ -3,28 +3,34 @@ import argparse
 from rich import print
 import httpx
 
+from client.util import trans
 from .services import config, auth, role, brand, device_category, device, user
 
 
 def connect(server_url: str):
-    print("Connecting to the server...")
+    print(trans("connecting"))
     response = httpx.get(f"{server_url}/auth/init")
     if response.status_code not in [200, 409]:
-        print("Failed to connect to the server.")
+        print(trans("connect_failed"))
         return
     config.write({"server_url": server_url})
-    print("Connected to the server successfully.")
+    print(trans("connect_success"))
 
 
 def login(username: str, password: str):
-    print("Logging in...")
+    print(trans("logging_in"))
     response = auth.login(config.read_server_url(), username, password)
     if response.status_code != 200:
         print(response.json()["detail"] or None, response.status_code)
         return
     access_token = response.json()["access_token"]
     config.write({"access_token": access_token})
-    print("Logged in successfully.")
+    print(trans("login_success"))
+
+
+def switch_lang(lang: str):
+    config.write({"lang": lang})
+    print(trans("switch_lang_success"))
 
 
 def remove():
