@@ -3,6 +3,8 @@ from .config import read_server_url, read_access_token
 from rich.console import Console
 from rich.table import Table
 
+from ..util import trans
+
 console = Console()
 
 
@@ -25,18 +27,18 @@ def select_device_categories():
         headers={"Authorization": f"Bearer {read_access_token()}"},
     )
     if response.status_code != 200:
-        console.print("Failed to get device categories.", style="bold red")
+        console.print(trans("device_category.create_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Device Categories", response.status_code, style="bold green")
+    console.print(trans("device_category.list"), response.status_code, style="bold green")
 
     device_categories = response.json()
 
     table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("ID", style="dim", width=12)
-    table.add_column("Name")
+    table.add_column(trans("device_category.columns.id"), style="dim", width=12)
+    table.add_column(trans("device_category.columns.name"))
 
     for device_category in device_categories:
         table.add_row(
@@ -53,24 +55,25 @@ def select_device_category(device_category_id: int):
         headers={"Authorization": f"Bearer {read_access_token()}"},
     )
     if response.status_code != 200:
-        console.print("Failed to get device_category.", style="bold red")
+        console.print(trans("device_category.select_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Device Category", response.status_code, style="bold green")
+    console.print(trans("device_category.info"), response.status_code, style="bold green")
 
     device_category = response.json()
 
     if device_category:
         table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("Fields")
-        table.add_column("Values")
-        table.add_row("ID", str(device_category['id']))
-        table.add_row("Name", device_category['name'])
-        table.add_row("Created At", device_category['created_at'])
+        table.add_column(trans("table.fields"))
+        table.add_column(trans("table.values"))
+        table.add_row(trans("device_category.columns.id"), str(device_category['id']))
+        table.add_row(trans("device_category.columns.name"), device_category['name'])
+        table.add_row(trans("device_category.columns.created_at"), device_category['created_at'])
         if device_category['creator']:
-            table.add_row("Creator", f"{device_category['creator']['name']} ({device_category['creator']['username']})")
+            table.add_row(trans("device_category.columns.creator"),
+                          f"{device_category['creator']['name']} ({device_category['creator']['username']})")
 
         console.print(table)
 
@@ -85,14 +88,14 @@ def create_device_category(name: str):
         json=create_form,
     )
     if response.status_code != 200:
-        console.print("Failed to create device category.", style="bold red")
+        console.print(trans("device_category.create_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Device Category Create", response.status_code, style="bold green")
+    console.print(trans("device_category.create"), response.status_code, style="bold green")
 
-    console.print(f"The new device category id: {response.json()['id']}")
+    console.print(f"{trans('device_category.new_id')}{response.json()['id']}")
 
 
 def update_device_category(device_category_id: int, key: str, value: str):
@@ -110,12 +113,12 @@ def update_device_category(device_category_id: int, key: str, value: str):
         json=update_form,
     )
     if response.status_code != 200:
-        console.print("Failed to update device category.", style="bold red")
+        console.print(trans("device_category.update_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Device Category Update", response.status_code, style="bold green")
+    console.print(trans("device_category.update"), response.status_code, style="bold green")
 
 
 def delete_device_category(device_category_id: int):
@@ -125,9 +128,9 @@ def delete_device_category(device_category_id: int):
     )
 
     if response.status_code != 200:
-        console.print("Failed to delete device category.", style="bold red")
+        console.print(trans("device_category.delete_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Device Category Delete", response.status_code, style="bold green")
+    console.print(trans("device_category.delete"), response.status_code, style="bold green")

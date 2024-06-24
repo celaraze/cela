@@ -10,6 +10,10 @@ English | [简体中文](README/README.zh_CN.md)
 Cela is an asset management system with front-end and back-end separation, and provides a command-line client. Users can
 use the command-line client to manage assets, or use their own built front-end program.
 
+Even if you are a developer or a user, it is highly recommended that you read the [Answering](ANSWERING.md) first, which
+will let you know the
+development direction and design philosophy of this system.
+
 Cela has the following features:
 
 - User authentication using `bearer` token.

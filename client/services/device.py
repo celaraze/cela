@@ -3,6 +3,8 @@ from .config import read_server_url, read_access_token
 from rich.console import Console
 from rich.table import Table
 
+from ..util import trans
+
 console = Console()
 
 
@@ -25,21 +27,21 @@ def select_devices():
         headers={"Authorization": f"Bearer {read_access_token()}"},
     )
     if response.status_code != 200:
-        console.print("Failed to get devices.", style="bold red")
+        console.print(trans("device.select_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Devices", response.status_code, style="bold green")
+    console.print(trans("device.list"), response.status_code, style="bold green")
 
     devices = response.json()
 
     table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("ID", style="dim", width=12, justify="center")
-    table.add_column("Hostname", justify="center")
-    table.add_column("Asset Number", justify="center")
-    table.add_column("IPv4 Address", justify="center")
-    table.add_column("MAC Address", justify="center")
+    table.add_column(trans("device.columns.id"), style="dim", width=12, justify="center")
+    table.add_column(trans("device.columns.hostname"), justify="center")
+    table.add_column(trans("device.columns.asset_number"), justify="center")
+    table.add_column(trans("device.columns.ipv4_address"), justify="center")
+    table.add_column(trans("device.columns.mac_address"), justify="center")
 
     for device in devices:
         table.add_row(
@@ -59,28 +61,29 @@ def select_device(device_id: int):
         headers={"Authorization": f"Bearer {read_access_token()}"},
     )
     if response.status_code != 200:
-        console.print("Failed to get device.", style="bold red")
+        console.print(trans("device.select_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Device", response.status_code, style="bold green")
+    console.print(trans("device.info"), response.status_code, style="bold green")
 
     device = response.json()
 
     if device:
         table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("Fields")
-        table.add_column("Values", justify="right")
-        table.add_row("ID", str(device['id']))
-        table.add_row("Hostname", device['hostname'])
-        table.add_row("IPv4 Address", device['ipv4_address'])
-        table.add_row("IPv6 Address", device['ipv6_address'])
-        table.add_row("MAC Address", device['mac_address'])
-        table.add_row("Description", device['description'])
-        table.add_row("Created At", device['created_at'])
+        table.add_column(trans("table.fields"))
+        table.add_column(trans("table.values"), justify="right")
+        table.add_row(trans("device.columns.id"), str(device['id']))
+        table.add_row(trans("device.columns.hostname"), device['hostname'])
+        table.add_row(trans("device.columns.ipv4_address"), device['ipv4_address'])
+        table.add_row(trans("device.columns.ipv6_address"), device['ipv6_address'])
+        table.add_row(trans("device.columns.mac_address"), device['mac_address'])
+        table.add_row(trans("device.columns.description"), device['description'])
+        table.add_row(trans("device.columns.created_at"), device['created_at'])
         if device['creator']:
-            table.add_row("Creator", f"{device['creator']['name']} ({device['creator']['username']})")
+            table.add_row(trans("device.columns.creator"),
+                          f"{device['creator']['name']} ({device['creator']['username']})")
         console.print(table)
 
 
@@ -101,14 +104,14 @@ def create_device(args):
         json=create_form,
     )
     if response.status_code != 200:
-        console.print("Failed to create device.", style="bold red")
+        console.print(trans("device.create_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Device Create", response.status_code, style="bold green")
+    console.print(trans("device.create"), response.status_code, style="bold green")
 
-    console.print(f"The new device id: {response.json()['id']}")
+    console.print(f"{trans('device.new_id')}{response.json()['id']}")
 
 
 def update_device(role_id: int, key: str, value: str):
@@ -126,12 +129,12 @@ def update_device(role_id: int, key: str, value: str):
         json=update_form,
     )
     if response.status_code != 200:
-        console.print("Failed to update device.", style="bold red")
+        console.print(trans("device.update_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Device Update", response.status_code, style="bold green")
+    console.print(trans("device.update"), response.status_code, style="bold green")
 
 
 def delete_device(role_id: int):
@@ -141,9 +144,9 @@ def delete_device(role_id: int):
     )
 
     if response.status_code != 200:
-        console.print("Failed to delete device.", style="bold red")
+        console.print(trans("device.delete_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Device Delete", response.status_code, style="bold green")
+    console.print(trans("device.delete"), response.status_code, style="bold green")

@@ -1,40 +1,8 @@
 import argparse
 
 from rich import print
-import httpx
 
-from client.util import trans
-from .services import config, auth, role, brand, device_category, device, user
-
-
-def connect(server_url: str):
-    print(trans("connecting"))
-    response = httpx.get(f"{server_url}/auth/init")
-    if response.status_code not in [200, 409]:
-        print(trans("connect_failed"))
-        return
-    config.write({"server_url": server_url})
-    print(trans("connect_success"))
-
-
-def login(username: str, password: str):
-    print(trans("logging_in"))
-    response = auth.login(config.read_server_url(), username, password)
-    if response.status_code != 200:
-        print(response.json()["detail"] or None, response.status_code)
-        return
-    access_token = response.json()["access_token"]
-    config.write({"access_token": access_token})
-    print(trans("login_success"))
-
-
-def switch_lang(lang: str):
-    config.write({"lang": lang})
-    print(trans("switch_lang_success"))
-
-
-def remove():
-    config.remove()
+from .services import base, role, brand, device_category, device, user
 
 
 def main():
@@ -54,6 +22,9 @@ def main():
     login_parser = subparsers.add_parser('login')
     login_parser.add_argument('username', type=str, help='Username of the user.')
     login_parser.add_argument('password', type=str, help='Password of the user.')
+
+    # cela language
+    language_parser = subparsers.add_parser('language')
 
     # cela role <action>
     role_parser = subparsers.add_parser('role')
@@ -197,11 +168,13 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'connect':
-        connect(args.server_url)
+        base.connect(args.server_url)
+    elif args.command == 'language':
+        base.switch_lang()
     elif args.command == 'login':
-        login(args.username, args.password)
+        base.login(args.username, args.password)
     elif args.command == 'remove':
-        remove()
+        base.remove()
     elif args.command == 'role':
         role.switch(args)
     elif args.command == 'brand':

@@ -3,6 +3,8 @@ from .config import read_server_url, read_access_token
 from rich.console import Console
 from rich.table import Table
 
+from ..util import trans
+
 console = Console()
 
 
@@ -25,19 +27,19 @@ def select_roles():
         headers={"Authorization": f"Bearer {read_access_token()}"},
     )
     if response.status_code != 200:
-        console.print("Failed to get roles.", style="bold red")
+        console.print(trans("role.selects_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Roles", response.status_code, style="bold green")
+    console.print(trans("role.list"), response.status_code, style="bold green")
 
     roles = response.json()
 
     table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("ID", style="dim", width=12)
-    table.add_column("Name")
-    table.add_column("Scopes")
+    table.add_column(trans("role.columns.id"), style="dim", width=12)
+    table.add_column(trans("role.columns.name"))
+    table.add_column(trans("role.columns.scopes"))
 
     for role in roles:
         table.add_row(
@@ -55,25 +57,25 @@ def select_role(role_id: int):
         headers={"Authorization": f"Bearer {read_access_token()}"},
     )
     if response.status_code != 200:
-        console.print("Failed to get role.", style="bold red")
+        console.print(trans("role.select_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Role", response.status_code, style="bold green")
+    console.print(trans("role.info"), response.status_code, style="bold green")
 
     role = response.json()
 
     if role:
         table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("Fields")
-        table.add_column("Values")
-        table.add_row("ID", str(role['id']))
-        table.add_row("Name", role['name'])
-        table.add_row("Scopes", ", ".join(role['scopes']))
-        table.add_row("Created At", role['created_at'])
+        table.add_column(trans("table.fields"))
+        table.add_column(trans("table.values"))
+        table.add_row(trans("role.columns.id"), str(role['id']))
+        table.add_row(trans("role.columns.name"), role['name'])
+        table.add_row(trans("role.columns.scopes"), ", ".join(role['scopes']))
+        table.add_row(trans("role.columns.created_at"), role['created_at'])
         if role['creator']:
-            table.add_row("Creator", f"{role['creator']['name']} ({role['creator']['username']})")
+            table.add_row(trans("role.columns.creator"), f"{role['creator']['name']} ({role['creator']['username']})")
 
         console.print(table)
 
@@ -89,14 +91,14 @@ def create_role(name: str, scopes: str):
         json=create_form,
     )
     if response.status_code != 200:
-        console.print("Failed to create role.", style="bold red")
+        console.print(trans("role.create_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Role Create", response.status_code, style="bold green")
+    console.print(trans("role.create"), response.status_code, style="bold green")
 
-    console.print(f"The new role id: {response.json()['id']}")
+    console.print(f"{trans('role.new_id')}{response.json()['id']}")
 
 
 def update_role(role_id: int, key: str, value: str):
@@ -114,12 +116,12 @@ def update_role(role_id: int, key: str, value: str):
         json=update_form,
     )
     if response.status_code != 200:
-        console.print("Failed to update role.", style="bold red")
+        console.print(trans("role.update_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Role Update", response.status_code, style="bold green")
+    console.print(trans("role.update"), response.status_code, style="bold green")
 
 
 def delete_role(role_id: int):
@@ -129,9 +131,9 @@ def delete_role(role_id: int):
     )
 
     if response.status_code != 200:
-        console.print("Failed to delete role.", style="bold red")
+        console.print(trans("role.delete_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Role Delete", response.status_code, style="bold green")
+    console.print(trans("role.delete"), response.status_code, style="bold green")

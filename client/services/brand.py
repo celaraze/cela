@@ -3,6 +3,8 @@ from .config import read_server_url, read_access_token
 from rich.console import Console
 from rich.table import Table
 
+from ..util import trans
+
 console = Console()
 
 
@@ -25,18 +27,18 @@ def select_brands():
         headers={"Authorization": f"Bearer {read_access_token()}"},
     )
     if response.status_code != 200:
-        console.print("Failed to get brands.", style="bold red")
+        console.print(trans("brand.selects_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Brands", response.status_code, style="bold green")
+    console.print(trans("brand.list"), response.status_code, style="bold green")
 
     brands = response.json()
 
     table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("ID", style="dim", width=12)
-    table.add_column("Name")
+    table.add_column(trans("brand.columns.id"), style="dim", width=12)
+    table.add_column(trans("brand.columns.name"))
 
     for brand in brands:
         table.add_row(
@@ -53,24 +55,25 @@ def select_brand(brand_id: int):
         headers={"Authorization": f"Bearer {read_access_token()}"},
     )
     if response.status_code != 200:
-        console.print("Failed to get brand.", style="bold red")
+        console.print(trans("brand.select_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Role", response.status_code, style="bold green")
+    console.print(trans("brand.info"), response.status_code, style="bold green")
 
     brand = response.json()
 
     if brand:
         table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("Fields")
-        table.add_column("Values")
-        table.add_row("ID", str(brand['id']))
-        table.add_row("Name", brand['name'])
-        table.add_row("Created At", brand['created_at'])
+        table.add_column(trans("table.fields"))
+        table.add_column(trans("table.values"))
+        table.add_row(trans("brand.columns.id"), str(brand['id']))
+        table.add_row(trans("brand.columns.name"), brand['name'])
+        table.add_row(trans("brand.columns.created_at"), brand['created_at'])
         if brand['creator']:
-            table.add_row("Creator", f"{brand['creator']['name']} ({brand['creator']['username']})")
+            table.add_row(trans("brand.columns.creator"),
+                          f"{brand['creator']['name']} ({brand['creator']['username']})")
 
         console.print(table)
 
@@ -85,14 +88,14 @@ def create_brand(name: str):
         json=create_form,
     )
     if response.status_code != 200:
-        console.print("Failed to create brand.", style="bold red")
+        console.print(trans("brand.create_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Brand Create", response.status_code, style="bold green")
+    console.print(trans("brand.create"), response.status_code, style="bold green")
 
-    console.print(f"The new brand id: {response.json()['id']}")
+    console.print(f"{trans('brand.new_id')}{response.json()['id']}")
 
 
 def update_brand(brand_id: int, key: str, value: str):
@@ -110,12 +113,12 @@ def update_brand(brand_id: int, key: str, value: str):
         json=update_form,
     )
     if response.status_code != 200:
-        console.print("Failed to update brand.", style="bold red")
+        console.print(trans("brand.update_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Brand Update", response.status_code, style="bold green")
+    console.print(trans("brand.update"), response.status_code, style="bold green")
 
 
 def delete_brand(brand_id: int):
@@ -125,9 +128,9 @@ def delete_brand(brand_id: int):
     )
 
     if response.status_code != 200:
-        console.print("Failed to delete brand.", style="bold red")
+        console.print(trans("brand.delete_failed"), style="bold red")
         console.print(response.status_code)
         console.print(response.json()['detail'] or None, style="bold")
         exit(1)
 
-    console.print("Brand Delete", response.status_code, style="bold green")
+    console.print(trans("brand.delete"), response.status_code, style="bold green")

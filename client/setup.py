@@ -21,7 +21,7 @@ setup(
         'Programming Language :: Python :: 3.12',
     ],
     keywords='cela,asset,management,client',
-    install_requires=['pyyaml', 'pymysql', 'rich', 'httpx'],
+    install_requires=['pyyaml', 'pymysql', 'rich', 'httpx', 'picl'],
     entry_points={
         'console_scripts': [
             'cela=client.main:main',

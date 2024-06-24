@@ -10,37 +10,42 @@ CONFIG_FILE_PATH = os.path.join(os.path.expanduser('~'), '.cela', 'config.yml')
 def remove():
     if os.path.exists(CONFIG_FILE_PATH):
         os.remove(CONFIG_FILE_PATH)
-        print(trans("remove_config_success"))
+        print(trans("remove_config_file_success"))
     else:
-        print(trans("remove_config_not_found"))
+        print(trans("remove_config_file_not_found"))
+        exit(1)
+
+
+def create_if_not_exist():
+    dir_path = os.path.dirname(CONFIG_FILE_PATH)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+    if not os.path.exists(CONFIG_FILE_PATH):
+        with open(CONFIG_FILE_PATH, "w") as f:
+            yaml.dump({}, f)
 
 
 def read(key: str = None):
     if not os.path.exists(CONFIG_FILE_PATH):
-        print(trans("config_not_found"))
+        print(trans("config_file_not_found"))
         exit(1)
-    with open(CONFIG_FILE_PATH, "r") as f:
-        content = yaml.load(f, Loader=yaml.FullLoader)
-    if key:
-        return content[key]
-    return content
+    try:
+        with open(CONFIG_FILE_PATH, "r") as f:
+            content = yaml.safe_load(f)
+        if key:
+            return content[key]
+        return content
+    except yaml.YAMLError:
+        return {}
+    except KeyError:
+        raise
 
 
 def write(key_values: dict):
-    dir_path = os.path.dirname(CONFIG_FILE_PATH)
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-
-    if not os.path.exists(CONFIG_FILE_PATH):
-        content = {}
-    else:
-        content = read()
-
-    # 更新配置
+    create_if_not_exist()
+    content = read()
     for key, value in key_values.items():
         content[key] = value
-
-    # 写回配置
     with open(CONFIG_FILE_PATH, "w") as f:
         yaml.dump(content, f)
 
