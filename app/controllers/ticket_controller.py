@@ -4,7 +4,7 @@ from sqlalchemy import select
 from ..dependencies import get_oauth_scheme, get_current_user, databaseSession
 from ..database import schemas, tables
 from ..utils import common
-from ..services.ticket import get_comments, get_work_times, check_work, start_work, end_work
+from ..services.ticket import get_comments, get_minutes, check_work, start_work, end_work
 
 oauth2_scheme = get_oauth_scheme()
 
@@ -56,7 +56,7 @@ async def select_ticket(
             detail="Ticket not exists.",
         )
     ticket.comments = get_comments(db, ticket)
-    ticket.work_times = get_work_times(db, ticket)
+    ticket.work_times = get_minutes(db, ticket)
     ticket.creator = common.get_creator(db, ticket.creator_id)
     return ticket
 
@@ -154,13 +154,18 @@ async def create_ticket_has_comments(
 
 
 # Start work on ticket.
-@router.post("/{ticket_id}/start_work", response_model=schemas.TicketWorkTime)
+@router.post("/{ticket_id}/start_work", response_model=schemas.TicketMinute)
 async def start_work_on_ticket(
         db: databaseSession,
         ticket_id: int,
-        form_data: schemas.TicketWorkTimeCreateForm,
+        form_data: schemas.TicketMinuteCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["ticket:work"]),
 ):
+    if ticket_id != form_data.ticket_id:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Ticket id not match.",
+        )
     stmt = (
         select(tables.Ticket)
         .where(tables.Ticket.deleted_at.is_(None))
@@ -173,25 +178,30 @@ async def start_work_on_ticket(
             detail="Ticket not exists.",
         )
 
-    work_time = check_work(db, ticket, current_user)
-    if work_time:
+    minute = check_work(db, ticket, current_user)
+    if minute:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Work on ticket already exists.",
         )
 
-    work_time = start_work(db, ticket, current_user, form_data.message)
-    return work_time
+    minute = start_work(db, ticket, current_user, form_data.message or None)
+    return minute
 
 
 # End work on ticket.
-@router.post("/{ticket_id}/end_work", response_model=schemas.TicketWorkTime)
+@router.post("/{ticket_id}/end_work", response_model=schemas.TicketMinute)
 async def end_work_on_ticket(
         db: databaseSession,
         ticket_id: int,
-        form_data: schemas.TicketWorkTimeCreateForm,
+        form_data: schemas.TicketMinuteCreateForm,
         current_user: schemas.User = Security(get_current_user, scopes=["ticket:work"]),
 ):
+    if ticket_id != form_data.ticket_id:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Ticket id not match.",
+        )
     stmt = (
         select(tables.Ticket)
         .where(tables.Ticket.deleted_at.is_(None))
@@ -204,12 +214,12 @@ async def end_work_on_ticket(
             detail="Ticket not exists.",
         )
 
-    work_time = check_work(db, ticket, current_user)
-    if not work_time:
+    minute = check_work(db, ticket, current_user)
+    if not minute:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Work on ticket not exists.",
         )
 
-    work_time = end_work(db, ticket, current_user, form_data.message)
-    return work_time
+    minute = end_work(db, ticket, current_user, form_data.message)
+    return minute

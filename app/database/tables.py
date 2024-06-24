@@ -110,9 +110,27 @@ class TicketComment(Base, Additions):
     comment: Mapped[str] = mapped_column(Text, nullable=True, comment="评论")
 
 
-class TicketWorkTime(Base, Additions):
-    __tablename__ = "ticket_work_times"
+class TicketMinute(Base, Additions):
+    __tablename__ = "ticket_minutes"
     id: Mapped[int] = mapped_column(primary_key=True, comment="ID")
     ticket_id: Mapped[int] = mapped_column(Integer, comment="工单 ID")
     flag: Mapped[int] = mapped_column(Integer, default=0, comment="标识：0开始1结束")
     message: Mapped[str] = mapped_column(Text, nullable=True, comment="备注")
+
+
+class Todo(Base, Additions):
+    __tablename__ = "todos"
+    id: Mapped[int] = mapped_column(primary_key=True, comment="ID")
+    title: Mapped[str] = mapped_column(String(255), comment="标题")
+    priority: Mapped[int] = mapped_column(Integer, comment="优先级,0低1中2高3紧急")
+    expired_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, comment="到期时间")
+    is_finished: Mapped[int] = mapped_column(Integer, default=0, comment="状态：0未完成1已完成")
+    finished_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, comment="完成时间")
+
+
+class TodoMinute(Base, Additions):
+    __tablename__ = "todo_minutes"
+    id: Mapped[int] = mapped_column(primary_key=True, comment="ID")
+    todo_id: Mapped[int] = mapped_column(Integer, comment="待办 ID")
+    flag: Mapped[int] = mapped_column(Integer, default=0, comment="标识：0开始1结束")
+    is_finished: Mapped[int] = mapped_column(Integer, default=0, comment="状态：0未完成1已完成")

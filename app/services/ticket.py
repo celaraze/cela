@@ -1,4 +1,3 @@
-from app.utils import common
 from sqlalchemy import select
 
 from app.database import tables, schemas
@@ -14,49 +13,49 @@ def get_comments(db, ticket):
     return comments
 
 
-def get_work_times(db, ticket):
+def get_minutes(db, ticket):
     stmt = (
-        select(tables.TicketWorkTime)
-        .where(tables.TicketWorkTime.deleted_at.is_(None))
-        .where(tables.TicketWorkTime.ticket_id.__eq__(ticket.id))
+        select(tables.TicketMinute)
+        .where(tables.TicketMinute.deleted_at.is_(None))
+        .where(tables.TicketMinute.ticket_id.__eq__(ticket.id))
     )
-    work_times = db.scalars(stmt).all()
-    return work_times
+    minutes = db.scalars(stmt).all()
+    return minutes
 
 
 def check_work(db, ticket, user):
     stmt = (
-        select(tables.TicketWorkTime)
-        .where(tables.TicketWorkTime.deleted_at.is_(None))
-        .where(tables.TicketWorkTime.ticket_id.__eq__(ticket.id))
-        .where(tables.TicketWorkTime.creator_id.__eq__(user.id))
-        .where(tables.TicketWorkTime.flag.__eq__(0))
+        select(tables.TicketMinute)
+        .where(tables.TicketMinute.deleted_at.is_(None))
+        .where(tables.TicketMinute.ticket_id.__eq__(ticket.id))
+        .where(tables.TicketMinute.creator_id.__eq__(user.id))
+        .where(tables.TicketMinute.flag.__eq__(0))
     )
-    work_time = db.scalars(stmt).one_or_none()
-    return work_time
+    minute = db.scalars(stmt).one_or_none()
+    return minute
 
 
-def start_work(db, ticket, user, message=None):
-    form_data = schemas.TicketWorkTimeCreateForm(
+def start_work(db, ticket, user, message):
+    form_data = schemas.TicketMinuteCreateForm(
         ticket_id=ticket.id,
         flag=0,
         message=message,
         creator_id=user.id,
     )
-    work_time = tables.TicketWorkTime(**form_data.model_dump())
-    db.add(work_time)
+    minute = tables.TicketMinute(**form_data.model_dump())
+    db.add(minute)
     db.commit()
-    return work_time
+    return minute
 
 
-def end_work(db, ticket, user, message=None):
-    form_data = schemas.TicketWorkTimeCreateForm(
+def end_work(db, ticket, user, message):
+    form_data = schemas.TicketMinuteCreateForm(
         ticket_id=ticket.id,
         flag=1,
         message=message,
         creator_id=user.id,
     )
-    work_time = tables.TicketWorkTime(**form_data.model_dump())
-    db.add(work_time)
+    minute = tables.TicketMinute(**form_data.model_dump())
+    db.add(minute)
     db.commit()
-    return work_time
+    return minute

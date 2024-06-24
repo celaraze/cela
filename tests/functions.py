@@ -414,14 +414,70 @@ def create_ticket_comment(access_token: str, ticket_id: id, form_data: dict):
     )
 
 
-def start_work_on_ticket(access_token: str, ticket_id: id):
+def start_work_on_ticket(access_token: str, ticket_id: id, form_data: dict):
     return client.post(
         f"/tickets/{ticket_id}/start_work",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data,
+    )
+
+
+def end_work_on_ticket(access_token: str, ticket_id: id, form_data: dict):
+    return client.post(
+        f"/tickets/{ticket_id}/end_work",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data
+    )
+
+
+def select_todos(access_token: str):
+    return client.get(
+        f"/todos",
         headers={"Authorization": f"Bearer {access_token}"},
     )
 
 
-def end_work_on_ticket(access_token: str, ticket_id: id):
+def select_todo(access_token: str, todo_id: id):
+    return client.get(
+        f"/todos/{todo_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def create_todo(access_token: str, form_data: dict):
     return client.post(
-        f"/tickets/{ticket_id}/end_work",
+        f"/todos",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data
+    )
+
+
+def update_todo(access_token: str, todo_id: id, form_data: list[dict]):
+    return client.put(
+        f"/todos/{todo_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data
+    )
+
+
+def delete_todo(access_token: str, todo_id: id):
+    return client.delete(
+        f"/todos/{todo_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+
+def start_work_on_todo(access_token: str, todo_id: id, form_data: dict):
+    return client.post(
+        f"/todos/{todo_id}/start_work",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data,
+    )
+
+
+def end_work_on_todo(access_token: str, todo_id: id, form_data: dict):
+    return client.post(
+        f"/todos/{todo_id}/end_work",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json=form_data,
     )

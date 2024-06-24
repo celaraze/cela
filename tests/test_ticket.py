@@ -40,7 +40,7 @@ def test_create():
     assert response.status_code == 200
     ticket_id = response.json()['id']
 
-    # Test duplicate, should success because of name is not unique.
+    # Test duplicate, should success because of title is not unique.
     response = functions.create_ticket(admin_access_token, form_data)
     assert response.status_code == 200
 
@@ -87,7 +87,7 @@ def test_delete():
     assert response.status_code == 404
 
 
-def test_ticket_has_comments():
+def test_ticket_comments():
     global ticket_id
 
     form_data = {
@@ -112,6 +112,63 @@ def test_ticket_has_comments():
     response = functions.select_ticket(admin_access_token, ticket_id)
     assert response.status_code == 200
     assert response.json()['comments'][0]['comment'] == "Test comment."
+
+
+def test_todo_minutes():
+    global ticket_id
+
+    form_data = {
+        "title": "No LAN connection",
+        "description": "The LAN connection is not working.",
+    }
+    response = functions.create_ticket(admin_access_token, form_data)
+    assert response.status_code == 200
+    ticket_id = response.json()['id']
+
+    form_data = {
+        "ticket_id": 0,
+        "message": None
+    }
+
+    response = functions.start_work_on_ticket(admin_access_token, 0, form_data)
+    assert response.status_code == 404
+
+    form_data = {
+        "ticket_id": ticket_id,
+        "message": None
+    }
+
+    response = functions.start_work_on_ticket(admin_access_token, 0, form_data)
+    assert response.status_code == 406
+
+    resource = functions.start_work_on_ticket(admin_access_token, ticket_id, form_data)
+    assert resource.status_code == 200
+    start_time = resource.json()['created_at']
+
+    response = functions.start_work_on_ticket(admin_access_token, ticket_id, form_data)
+    assert response.status_code == 409
+
+    form_data = {
+        "ticket_id": 0,
+        "message": None
+    }
+
+    response = functions.end_work_on_ticket(admin_access_token, 0, form_data)
+    assert response.status_code == 404
+
+    form_data = {
+        "ticket_id": ticket_id,
+        "message": None
+    }
+
+    response = functions.end_work_on_ticket(admin_access_token, 0, form_data)
+    assert response.status_code == 406
+
+    resource = functions.end_work_on_ticket(admin_access_token, ticket_id, form_data)
+    assert resource.status_code == 200
+    end_time = resource.json()['created_at']
+
+    assert end_time >= start_time
 
 
 def test_end():

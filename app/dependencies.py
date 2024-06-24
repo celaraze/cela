@@ -52,6 +52,13 @@ def get_oauth_scheme():
             "user_has_device:info": "Read information about one user device.",
             "user_has_device:create": "Create user device",
             "user_has_device:delete": "Delete user device.",
+
+            "todo:list": "Read information about todos.",
+            "todo:info": "Read information about one todo.",
+            "todo:create": "Create new todo.",
+            "todo:update": "Update todo.",
+            "todo:delete": "Delete todo.",
+            "todo:work": "Work on todo.",
         }
     )
 

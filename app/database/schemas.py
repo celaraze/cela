@@ -129,10 +129,28 @@ class TicketCommentCreateForm(BaseSchema):
     created_at: str = common.now()
 
 
-class TicketWorkTimeCreateForm(BaseSchema):
+class TicketMinuteCreateForm(BaseSchema):
     ticket_id: int
     flag: int = 0
     message: Union[str, None] = None
+    creator_id: int = 0
+    created_at: str = common.now()
+
+
+class TodoCreateForm(BaseSchema):
+    title: str
+    priority: int = 0
+    expired_at: Union[datetime, None] = None
+    is_finished: bool = False
+    finished_at: Union[datetime, None] = None
+    creator_id: int = 0
+    created_at: str = common.now()
+
+
+class TodoMinuteCreateForm(BaseSchema):
+    todo_id: int
+    flag: int = 0
+    is_finished: int = 0
     creator_id: int = 0
     created_at: str = common.now()
 
@@ -427,7 +445,7 @@ class Ticket(BaseSchema):
     deleter: Union[Deleter, None] = None
 
     comments: list["TicketComment"] = []
-    work_times: list["TicketWorkTime"] = []
+    minutes: list["TicketMinute"] = []
 
     class ConfigDict:
         from_attributes = True
@@ -446,11 +464,42 @@ class TicketComment(BaseSchema):
         from_attributes = True
 
 
-class TicketWorkTime(BaseSchema):
+class TicketMinute(BaseSchema):
     id: int
     ticket_id: int
     flag: int
     message: Union[str, None]
+    creator_id: int
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class Todo(BaseSchema):
+    id: int
+    title: str
+    priority: int
+    expired_at: Union[datetime, None]
+    is_finished: bool
+    finished_at: Union[datetime, None]
+    creator_id: int
+    created_at: Union[datetime, None]
+    deleted_at: Union[datetime, None]
+    creator: Union[Creator, None] = None
+
+    minutes: list["TodoMinute"] = []
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class TodoMinute(BaseSchema):
+    id: int
+    todo_id: int
+    flag: int
+    is_finished: int
     creator_id: int
     created_at: Union[datetime, None]
     deleted_at: Union[datetime, None]

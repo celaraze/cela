@@ -10,6 +10,7 @@ from .controllers import (
     device_controller,
     search_controller,
     ticket_controller,
+    todo_controller,
 )
 
 tables.Base.metadata.create_all(bind=engine)
@@ -50,6 +51,7 @@ app.include_router(device_category_controller.router)
 app.include_router(device_controller.router)
 app.include_router(search_controller.router)
 app.include_router(ticket_controller.router)
+app.include_router(todo_controller.router)
 
 
 @app.get("/")
