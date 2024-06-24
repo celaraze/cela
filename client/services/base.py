@@ -29,9 +29,9 @@ def login(username: str, password: str):
 
 
 def switch_lang():
-    options = ['zh_CN', 'en_US']
+    options = ['en_US', 'zh_CN']
     selected = pick(options, trans("switch_languages"))
-    print(selected)
+    config.write({"lang": selected[0]})
     print(trans("switch_lang_success"))
 
 

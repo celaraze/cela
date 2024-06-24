@@ -20,6 +20,8 @@ def trans(lang_id: str):
             with open(f"client/langs/{lang}.yml", "r") as f:
                 content = yaml.safe_load(f)
             return content[lang_id]
+        except TypeError:
+            return lang_id
         except KeyError:
             return lang_id
     except yaml.YAMLError:
