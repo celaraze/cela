@@ -24,6 +24,18 @@ Cela has the following features:
 - Inherited from the design pattern of chemex and cat.
 - ...
 
+## RoadMap
+
+- [x] User authentication
+- [x] Role-based access control
+- [x] Command-line client
+- [x] Todo
+- [ ] Device
+- [ ] Ticket
+- [ ] Software
+- [ ] Part
+- [ ] Inventory
+
 ## Quick Start
 
 Start back-end service with checking `docker-compose.yml` and run the following:

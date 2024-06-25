@@ -58,7 +58,7 @@ async def select_todo(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Todo not exists.",
         )
-    todo.work_times = get_minutes(db, todo)
+    todo.minutes = get_minutes(db, todo)
     todo.creator = common.get_creator(db, todo.creator_id)
     return todo
 

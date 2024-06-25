@@ -10,9 +10,9 @@ CONFIG_FILE_PATH = os.path.join(os.path.expanduser('~'), '.cela', 'config.yml')
 def remove():
     if os.path.exists(CONFIG_FILE_PATH):
         os.remove(CONFIG_FILE_PATH)
-        print(trans("remove_config_file_success"))
+        print("Config file removed.")
     else:
-        print(trans("remove_config_file_not_found"))
+        print("Config file not found.")
         exit(1)
 
 
@@ -27,7 +27,7 @@ def create_if_not_exist():
 
 def read(key: str = None):
     if not os.path.exists(CONFIG_FILE_PATH):
-        print(trans("config_file_not_found"))
+        print("Config file not found.")
         exit(1)
     try:
         with open(CONFIG_FILE_PATH, "r") as f:
@@ -54,7 +54,7 @@ def read_server_url():
     try:
         return read("server_url")
     except KeyError:
-        print(trans("server_url_not_found"))
+        print("Server URL not found.")
         exit(1)
 
 
@@ -62,7 +62,7 @@ def read_access_token():
     try:
         return read("access_token")
     except KeyError:
-        print(trans("access_token_not_found"))
+        print("Access token not found.")
         exit(1)
 
 
