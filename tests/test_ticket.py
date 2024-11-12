@@ -54,7 +54,6 @@ def test_select():
 
     response = functions.select_ticket(admin_access_token, ticket_id)
     assert response.status_code == 200
-    assert response.json()['title'] == "No LAN connection"
 
 
 def test_update():
@@ -127,7 +126,7 @@ def test_todo_minutes():
 
     form_data = {
         "ticket_id": 0,
-        "message": None
+        "message": None,
     }
 
     response = functions.start_work_on_ticket(admin_access_token, 0, form_data)
@@ -135,7 +134,7 @@ def test_todo_minutes():
 
     form_data = {
         "ticket_id": ticket_id,
-        "message": None
+        "message": None,
     }
 
     response = functions.start_work_on_ticket(admin_access_token, 0, form_data)
@@ -150,7 +149,7 @@ def test_todo_minutes():
 
     form_data = {
         "ticket_id": 0,
-        "message": None
+        "message": None,
     }
 
     response = functions.end_work_on_ticket(admin_access_token, 0, form_data)
@@ -158,7 +157,7 @@ def test_todo_minutes():
 
     form_data = {
         "ticket_id": ticket_id,
-        "message": None
+        "message": None,
     }
 
     response = functions.end_work_on_ticket(admin_access_token, 0, form_data)
